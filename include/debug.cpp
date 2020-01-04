@@ -66,6 +66,17 @@ namespace lak
     return stream.str();
   }
 
+  void debugger_t::abort()
+  {
+    std::cerr << "Aborting...\n";
+    if (!crash_path.empty())
+      std::cerr << "Saving crash log to " << lak::debugger.save() << "\n";
+    std::cerr << "Press enter to continue...\n";
+    getchar();
+    std::abort();
+  }
+
+
   std::filesystem::path debugger_t::save()
   {
     return save(crash_path);

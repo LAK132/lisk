@@ -22,42 +22,46 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "../lisk.hpp"
-#include "debug.hpp"
+#include "environment.hpp"
 
-#include <iostream>
-
-bool running = true;
-
-lisk::expression exit(lisk::environment &e)
+namespace lisk
 {
-  running = false;
-  return lisk::expression(lisk::atom(lisk::atom::nil{}));
-}
-
-int main(int argc, char **argv)
-{
-  using namespace std::string_literals;
-
-  lisk::environment default_env = lisk::builtin::default_env();
-
-  default_env.define_functor("exit", exit);
-
-  while (running)
+  environment environment::extends(const environment &other)
   {
-    std::cout << "lisk> ";
-    std::string string;
-    std::getline(std::cin, string);
-    if (!std::cin.good())
-    {
-      std::cout << "\nlisk$ Goodbye!\n";
-      break;
-    }
-    const auto tokens = lisk::tokenise(string);
-    const auto expr   = lisk::parse(tokens);
-    const auto eval   = lisk::eval(expr, default_env);
-    const auto result = lisk::to_string(eval);
-    std::cout << "lisk$ " << result << "\n";
+    return {value_type::extends(other.map)};
   }
-  std::cout << "\n";
+
+  void environment::define_expr(const string &str, const expression &expr)
+  {
+    map.value()[str] = expr;
+  }
+
+  void environment::define_atom(const string &str, const atom &a)
+  {
+    map.value()[str] = a;
+  }
+
+  void environment::define_list(const string &str,
+                                const shared_list<expression> &list)
+  {
+    map.value()[str] = list;
+  }
+
+  void environment::define_callable(const string &str, const callable &c)
+  {
+    map.value()[str] = c;
+  }
+
+  void environment::define_functor(const string &str, const functor &f)
+  {
+    map.value()[str] = f;
+  }
+
+  expression environment::operator[](const string &str) const
+  {
+    for (const auto &node : map)
+      if (const auto it = node.value.find(str); it != node.value.end())
+        return it->second;
+    return {expression::null{}};
+  }
 }

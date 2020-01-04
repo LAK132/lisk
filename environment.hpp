@@ -22,42 +22,32 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "../lisk.hpp"
-#include "debug.hpp"
+#ifndef LISK_ENVIRONMENT_HPP
+#define LISK_ENVIRONMENT_HPP
 
-#include <iostream>
+#include "callable.hpp"
+#include "expression.hpp"
+#include "shared_list.hpp"
 
-bool running = true;
+#include <unordered_map>
 
-lisk::expression exit(lisk::environment &e)
+namespace lisk
 {
-  running = false;
-  return lisk::expression(lisk::atom(lisk::atom::nil{}));
-}
-
-int main(int argc, char **argv)
-{
-  using namespace std::string_literals;
-
-  lisk::environment default_env = lisk::builtin::default_env();
-
-  default_env.define_functor("exit", exit);
-
-  while (running)
+  struct environment
   {
-    std::cout << "lisk> ";
-    std::string string;
-    std::getline(std::cin, string);
-    if (!std::cin.good())
-    {
-      std::cout << "\nlisk$ Goodbye!\n";
-      break;
-    }
-    const auto tokens = lisk::tokenise(string);
-    const auto expr   = lisk::parse(tokens);
-    const auto eval   = lisk::eval(expr, default_env);
-    const auto result = lisk::to_string(eval);
-    std::cout << "lisk$ " << result << "\n";
-  }
-  std::cout << "\n";
+    using value_type = shared_list<std::unordered_map<string, expression>>;
+    value_type map = {};
+
+    static environment extends(const environment &other);
+
+    void define_expr(const string &str, const expression &expr);
+    void define_atom(const string &str, const atom &a);
+    void define_list(const string &str, const shared_list<expression> &list);
+    void define_callable(const string &str, const callable &c);
+    void define_functor(const string &str, const functor &f);
+
+    expression operator[](const string &str) const;
+  };
 }
+
+#endif

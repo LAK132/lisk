@@ -22,42 +22,31 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "../lisk.hpp"
-#include "debug.hpp"
+#ifndef LISK_LAMBDA_HPP
+#define LISK_LAMBDA_HPP
 
-#include <iostream>
+#include "environment.hpp"
+#include "eval.hpp"
+#include "expression.hpp"
+#include "shared_list.hpp"
 
-bool running = true;
-
-lisk::expression exit(lisk::environment &e)
+namespace lisk
 {
-  running = false;
-  return lisk::expression(lisk::atom(lisk::atom::nil{}));
-}
-
-int main(int argc, char **argv)
-{
-  using namespace std::string_literals;
-
-  lisk::environment default_env = lisk::builtin::default_env();
-
-  default_env.define_functor("exit", exit);
-
-  while (running)
+  struct lambda
   {
-    std::cout << "lisk> ";
-    std::string string;
-    std::getline(std::cin, string);
-    if (!std::cin.good())
-    {
-      std::cout << "\nlisk$ Goodbye!\n";
-      break;
-    }
-    const auto tokens = lisk::tokenise(string);
-    const auto expr   = lisk::parse(tokens);
-    const auto eval   = lisk::eval(expr, default_env);
-    const auto result = lisk::to_string(eval);
-    std::cout << "lisk$ " << result << "\n";
-  }
-  std::cout << "\n";
+    shared_list<expression> params;
+    shared_list<expression> exp;
+
+    lambda() = default;
+    lambda(const lambda &) = default;
+    lambda &operator=(const lambda &) = default;
+
+    lambda(shared_list<expression> l, environment &e);
+
+    expression operator()(shared_list<expression> l, environment &e) const;
+  };
+
+  string to_string(const lambda &l);
 }
+
+#endif

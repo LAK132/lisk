@@ -49,6 +49,8 @@ namespace lak
 
     std::string str();
 
+    void abort();
+
     std::filesystem::path save();
 
     std::filesystem::path save(const std::filesystem::path &path);
@@ -114,7 +116,7 @@ namespace lak
 # define WDEBUG(x) lak::debugger.std_out(WTO_STRING(L"DEBUG" << WDEBUG_LINE_FILE << L": "), WTO_STRING(std::hex << x << L"\n"));
 #endif
 
-#define ABORT() { std::cerr << "Aborting...\nSaving crash log to " << lak::debugger.save() << "\n"; std::cerr << "Press enter to continue...\n"; getchar(); std::abort(); }
+#define ABORT() { lak::debugger.abort(); }
 
 #if defined(NOLOG)
 # define  WARNING(x)

@@ -22,42 +22,29 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "../lisk.hpp"
-#include "debug.hpp"
+#include "string.hpp"
 
-#include <iostream>
-
-bool running = true;
-
-lisk::expression exit(lisk::environment &e)
+namespace lisk
 {
-  running = false;
-  return lisk::expression(lisk::atom(lisk::atom::nil{}));
-}
-
-int main(int argc, char **argv)
-{
-  using namespace std::string_literals;
-
-  lisk::environment default_env = lisk::builtin::default_env();
-
-  default_env.define_functor("exit", exit);
-
-  while (running)
+  string to_string(const symbol &sym)
   {
-    std::cout << "lisk> ";
-    std::string string;
-    std::getline(std::cin, string);
-    if (!std::cin.good())
-    {
-      std::cout << "\nlisk$ Goodbye!\n";
-      break;
-    }
-    const auto tokens = lisk::tokenise(string);
-    const auto expr   = lisk::parse(tokens);
-    const auto eval   = lisk::eval(expr, default_env);
-    const auto result = lisk::to_string(eval);
-    std::cout << "lisk$ " << result << "\n";
+    return sym;
   }
-  std::cout << "\n";
+
+  string to_string(const string &str)
+  {
+    auto result = str;
+    auto replace = [](string &str, const char c, const char *cstr)
+    {
+      for (auto i = str.find(c); i != string::npos; i = str.find(c))
+        str.replace(i, 1, cstr);
+    };
+    replace(result, '\n', "\\n");
+    replace(result, '\r', "\\r");
+    replace(result, '\t', "\\t");
+    replace(result, '\0', "\\0");
+    replace(result, '\"', "\\\"");
+
+    return "\"" + result + "\"";
+  }
 }
