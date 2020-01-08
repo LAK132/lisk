@@ -97,27 +97,31 @@ namespace lak
       return absolute;
   }
 
-  scoped_indenter::scoped_indenter()
+  scoped_indenter::scoped_indenter(const std::string &name)
   {
+    debugger.std_out("", name + " {\n");
     ++debug_indent;
   }
 
   scoped_indenter::~scoped_indenter()
   {
     --debug_indent;
+    debugger.std_out("", "}\n");
   }
 
   std::string scoped_indenter::str()
   {
     std::string s;
-    for (size_t i = debug_indent; i --> 0;) s += "|   ";
+    for (size_t i = debug_indent; i --> 0;)
+      s += ((debug_indent - i) & 1) ? "| " : ": ";
     return s;
   }
 
   std::wstring scoped_indenter::wstr()
   {
     std::wstring s;
-    for (size_t i = debug_indent; i --> 0;) s += L"|   ";
+    for (size_t i = debug_indent; i --> 0;)
+      s += ((debug_indent - i) & 1) ? L"| " : L": ";
     return s;
   }
 

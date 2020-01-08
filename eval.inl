@@ -40,8 +40,12 @@ namespace lisk
       return "<UNEVAL EXPRESSION>";
     else if constexpr (std::is_same_v<U, expression::null>)
       return "<NULL>";
-    else if constexpr (std::is_same_v<U, shared_list<expression>>)
+    else if constexpr (std::is_same_v<U, shared_list>)
       return "list";
+    else if constexpr (std::is_same_v<U, eval_shared_list>)
+      return "<EVAL LIST>";
+    else if constexpr (std::is_same_v<U, uneval_shared_list>)
+      return "<UNEVAL LIST>";
     else if constexpr (std::is_same_v<U, callable>)
       return "callable";
     else if constexpr (std::is_same_v<U, functor>)
@@ -68,14 +72,14 @@ namespace lisk
   }
 
   template<typename ...TYPES, size_t ...I>
-  bool _get_or_eval_arg_as(shared_list<expression> in_list, environment &e,
-                           std::tuple<TYPES...> &out_arg,
+  bool _get_or_eval_arg_as(shared_list in_list, environment &e,
+                           bool allow_tail, std::tuple<TYPES...> &out_arg,
                            std::index_sequence<I...>)
   {
     std::tuple<std::remove_cv_t<TYPES>...> result;
     [[maybe_unused]] auto _get_or_eval = [&](auto &&element, auto i) -> bool
     {
-      if (!get_or_eval_arg_as(in_list.value(), e, element))
+      if (!get_or_eval_arg_as(in_list.value(), e, allow_tail, element))
       {
         ERROR("Failed to evaluate element " << i << " "
               "'" << to_string(in_list.value()) << "' "
@@ -95,20 +99,23 @@ namespace lisk
   }
 
   template<typename ...TYPES>
-  bool get_or_eval_arg_as(shared_list<expression> in_list, environment &e,
+  bool get_or_eval_arg_as(shared_list in_list, environment &e, bool allow_tail,
                           std::tuple<TYPES...> &out_arg)
   {
-    return _get_or_eval_arg_as(in_list, e, out_arg,
+    return _get_or_eval_arg_as(in_list, e, allow_tail, out_arg,
                                std::make_index_sequence<sizeof...(TYPES)>{});
   }
 
   template<typename ...ARGS>
-  expression wrapper_function(void (*func)(), shared_list<expression> l,
-                              environment &e)
+  expression wrapper_function(void (*func)(), shared_list l,
+                              environment &e, bool allow_tail)
   {
     std::tuple<ARGS...> args;
-    if (!get_or_eval_arg_as(l, e, args)) return expression{atom{atom::nil{}}};
-    return std::apply((expression (*)(environment &, ARGS...))func,
-                      std::tuple_cat(std::forward_as_tuple(e), args));
+    if (!get_or_eval_arg_as(l, e, allow_tail, args))
+      return expression{atom{atom::nil{}}};
+    else
+      return std::apply((expression (*)(environment &, bool, ARGS...))func,
+                        std::tuple_cat(std::forward_as_tuple(e, allow_tail),
+                                       args));
   }
 }

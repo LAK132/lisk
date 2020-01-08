@@ -29,7 +29,7 @@ SOFTWARE.
 
 bool running = true;
 
-lisk::expression exit(lisk::environment &e)
+lisk::expression exit(lisk::environment &e, bool)
 {
   running = false;
   return lisk::expression(lisk::atom(lisk::atom::nil{}));
@@ -43,6 +43,26 @@ int main(int argc, char **argv)
 
   default_env.define_functor("exit", exit);
 
+  std::string str =
+    "(begin"
+      "(define func (lambda (x n)"
+                     "(begin"
+                       "(println \"Called func\")"
+                       "(println (list x n))"
+                       "(if (zero? n)"
+                         "x"
+                         "(tail (func (* x 2) (- n 1)))"
+                         ")"
+                       ")"
+                     ")"
+        ")"
+      "(println (func 2 10))"
+      "(exit)"
+      ")";
+
+  std::cout <<
+    lisk::to_string(lisk::eval(lisk::parse(lisk::tokenise(str)), default_env, true));
+
   while (running)
   {
     std::cout << "lisk> ";
@@ -55,7 +75,7 @@ int main(int argc, char **argv)
     }
     const auto tokens = lisk::tokenise(string);
     const auto expr   = lisk::parse(tokens);
-    const auto eval   = lisk::eval(expr, default_env);
+    const auto eval   = lisk::eval(expr, default_env, true);
     const auto result = lisk::to_string(eval);
     std::cout << "lisk$ " << result << "\n";
   }

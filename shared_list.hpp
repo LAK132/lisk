@@ -32,9 +32,9 @@ SOFTWARE.
 namespace lisk
 {
   template<typename T>
-  struct shared_list_node
+  struct basic_shared_list_node
   {
-    using pointer_type = std::shared_ptr<shared_list_node>;
+    using pointer_type = std::shared_ptr<basic_shared_list_node>;
 
     T value;
     pointer_type next;
@@ -43,47 +43,48 @@ namespace lisk
   };
 
   template<typename T>
-  struct shared_list
+  struct basic_shared_list
   {
-    mutable std::shared_ptr<shared_list_node<T>> _node;
+    mutable std::shared_ptr<basic_shared_list_node<T>> _node;
 
-    static shared_list create();
-    static shared_list extends(const shared_list &other);
+    static basic_shared_list create();
+    static basic_shared_list extends(const basic_shared_list &other);
 
-    shared_list &operator++();
-    shared_list operator++(int);
+    basic_shared_list &operator++();
+    basic_shared_list operator++(int);
 
     const T &value() const;
     T &value();
     const T &next_value() const;
     T &next_value();
 
-    shared_list next(size_t n = 1) const;
-    void set_next(shared_list l);
+    basic_shared_list next(size_t n = 1) const;
+    void set_next(basic_shared_list l);
 
     void clear();
     void clear_next();
 
-    shared_list begin() const;
-    shared_list last() const;
-    shared_list end() const;
+    basic_shared_list begin() const;
+    basic_shared_list last() const;
+    basic_shared_list end() const;
 
-    shared_list clone() const;
+    // 0 for full clone
+    basic_shared_list clone(size_t depth = 0) const;
 
-    bool operator==(const shared_list &other) const;
-    bool operator!=(const shared_list &other) const;
+    bool operator==(const basic_shared_list &other) const;
+    bool operator!=(const basic_shared_list &other) const;
 
     operator bool() const;
 
-    const shared_list_node<T> &operator*() const;
-    shared_list_node<T> &operator*();
+    const basic_shared_list_node<T> &operator*() const;
+    basic_shared_list_node<T> &operator*();
 
-    const shared_list_node<T> *operator->() const;
-    shared_list_node<T> *operator->();
+    const basic_shared_list_node<T> *operator->() const;
+    basic_shared_list_node<T> *operator->();
   };
 
   template<typename T>
-  string to_string(shared_list<T> list);
+  string to_string(basic_shared_list<T> list);
 }
 
 #include "shared_list.inl"

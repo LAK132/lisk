@@ -38,9 +38,19 @@ namespace lisk
     _value.emplace<atom>(a);
   }
 
-  expression::expression(const shared_list<expression> &list)
+  expression::expression(atom::nil)
   {
-    _value.emplace<shared_list<expression>>(list);
+    _value.emplace<atom>(atom::nil{});
+  }
+
+  expression::expression(const shared_list &list)
+  {
+    _value.emplace<shared_list>(list);
+  }
+
+  expression::expression(const eval_shared_list &list)
+  {
+    _value.emplace<eval_shared_list>(list);
   }
 
   expression::expression(const callable &c)
@@ -48,7 +58,7 @@ namespace lisk
     _value.emplace<callable>(c);
   }
 
-  expression &expression::operator=(const null)
+  expression &expression::operator=(null)
   {
     _value.emplace<null>();
     return *this;
@@ -60,9 +70,21 @@ namespace lisk
     return *this;
   }
 
-  expression &expression::operator=(const shared_list<expression> &list)
+  expression &expression::operator=(atom::nil)
   {
-    _value.emplace<shared_list<expression>>(list);
+    _value.emplace<atom>(atom::nil{});
+    return *this;
+  }
+
+  expression &expression::operator=(const shared_list &list)
+  {
+    _value.emplace<shared_list>(list);
+    return *this;
+  }
+
+  expression &expression::operator=(const eval_shared_list &list)
+  {
+    _value.emplace<eval_shared_list>(list);
     return *this;
   }
 
@@ -84,7 +106,12 @@ namespace lisk
 
   bool expression::is_list() const
   {
-    return std::holds_alternative<shared_list<expression>>(_value);
+    return std::holds_alternative<shared_list>(_value);
+  }
+
+  bool expression::is_eval_list() const
+  {
+    return std::holds_alternative<eval_shared_list>(_value);
   }
 
   bool expression::is_callable() const
@@ -108,18 +135,34 @@ namespace lisk
       return nullptr;
   }
 
-  const shared_list<expression> *expression::get_list() const
+  const shared_list *expression::get_list() const
   {
     if (is_list())
-      return &std::get<shared_list<expression>>(_value);
+      return &std::get<shared_list>(_value);
     else
       return nullptr;
   }
 
-  shared_list<expression> *expression::get_list()
+  shared_list *expression::get_list()
   {
     if (is_list())
-      return &std::get<shared_list<expression>>(_value);
+      return &std::get<shared_list>(_value);
+    else
+      return nullptr;
+  }
+
+  const eval_shared_list *expression::get_eval_list() const
+  {
+    if (is_eval_list())
+      return &std::get<eval_shared_list>(_value);
+    else
+      return nullptr;
+  }
+
+  eval_shared_list *expression::get_eval_list()
+  {
+    if (is_eval_list())
+      return &std::get<eval_shared_list>(_value);
     else
       return nullptr;
   }
@@ -150,14 +193,24 @@ namespace lisk
     return std::get<atom>(_value);
   }
 
-  const shared_list<expression> &expression::as_list() const
+  const shared_list &expression::as_list() const
   {
-    return std::get<shared_list<expression>>(_value);
+    return std::get<shared_list>(_value);
   }
 
-  shared_list<expression> &expression::as_list()
+  shared_list &expression::as_list()
   {
-    return std::get<shared_list<expression>>(_value);
+    return std::get<shared_list>(_value);
+  }
+
+  const eval_shared_list &expression::as_eval_list() const
+  {
+    return std::get<eval_shared_list>(_value);
+  }
+
+  eval_shared_list &expression::as_eval_list()
+  {
+    return std::get<eval_shared_list>(_value);
   }
 
   const callable &expression::as_callable() const
@@ -173,5 +226,15 @@ namespace lisk
   string to_string(const expression &expr)
   {
     return expr.visit([](auto &&a) { return to_string(a); });
+  }
+
+  string to_string(const eval_shared_list &list)
+  {
+    return "<EVAL " + to_string((const shared_list&)list) + ">";
+  }
+
+  string to_string(const uneval_shared_list &list)
+  {
+    return "<UNEVAL " + to_string((const shared_list&)list) + ">";
   }
 }

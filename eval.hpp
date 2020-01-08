@@ -37,11 +37,8 @@ namespace lisk
   struct functor;
   struct lambda;
 
-  struct uneval_expr : public expression {};
-  struct uneval_list : public shared_list<expression> {};
-
-  shared_list<expression> eval_all(shared_list<expression> l, environment &e);
-  expression eval(const expression &exp, environment &e);
+  shared_list eval_all(shared_list l, environment &e, bool allow_tail_eval);
+  expression eval(const expression &exp, environment &e, bool allow_tail_eval);
 
   template<typename T, typename U =
     std::remove_cv_t<std::remove_reference_t<T>>>
@@ -49,8 +46,8 @@ namespace lisk
 
   bool get_arg_as(const expression &in_expr, expression &out_arg);
   bool get_arg_as(const expression &in_expr, uneval_expr &out_arg);
-  bool get_arg_as(const expression &in_expr, shared_list<expression> &out_arg);
-  bool get_arg_as(const expression &in_expr, uneval_list &out_arg);
+  bool get_arg_as(const expression &in_expr, shared_list &out_arg);
+  bool get_arg_as(const expression &in_expr, uneval_shared_list &out_arg);
   bool get_arg_as(const expression &in_expr, callable &out_arg);
   bool get_arg_as(const expression &in_expr, functor &out_arg);
   bool get_arg_as(const expression &in_expr, lambda &out_arg);
@@ -63,48 +60,48 @@ namespace lisk
   bool get_arg_as(const expression &in_expr, real_t &out_arg);
 
   template<typename T>
-  bool eval_arg_as(const expression &in_expr, environment &e,
+  bool eval_arg_as(const expression &in_expr, environment &e, bool allow_tail,
                    T &out_arg)
   {
     using type = std::remove_cv_t<std::remove_reference_t<T>>;
     static_assert(!std::is_same_v<type, uneval_expr> &&
-                  !std::is_same_v<type, uneval_list>,
+                  !std::is_same_v<type, uneval_shared_list>,
                   "Cannot eval-as uneval types");
-    return get_arg_as(eval(in_expr, e), out_arg);
+    return get_arg_as(eval(in_expr, e, allow_tail), out_arg);
   }
 
   bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          expression &out_arg);
+                          bool allow_tail, expression &out_arg);
   bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          uneval_expr &out_arg);
+                          bool allow_tail, uneval_expr &out_arg);
   bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          shared_list<expression> &out_arg);
+                          bool allow_tail, shared_list &out_arg);
   bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          uneval_list &out_arg);
+                          bool allow_tail, uneval_shared_list &out_arg);
   bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          callable &out_arg);
+                          bool allow_tail, callable &out_arg);
   bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          functor &out_arg);
+                          bool allow_tail, functor &out_arg);
   bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          lambda &out_arg);
+                          bool allow_tail, lambda &out_arg);
   bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          atom &out_arg);
+                          bool allow_tail, atom &out_arg);
   bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          symbol &out_arg);
+                          bool allow_tail, symbol &out_arg);
   bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          string &out_arg);
+                          bool allow_tail, string &out_arg);
   bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          number &out_arg);
+                          bool allow_tail, number &out_arg);
   bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          uint_t &out_arg);
+                          bool allow_tail, uint_t &out_arg);
   bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          sint_t &out_arg);
+                          bool allow_tail, sint_t &out_arg);
   bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          real_t &out_arg);
+                          bool allow_tail, real_t &out_arg);
 
   template<typename ...ARGS>
-  expression wrapper_function(void (*func)(), shared_list<expression> l,
-                              environment &e);
+  expression wrapper_function(void (*func)(), shared_list l,
+                              environment &e, bool allow_tail);
 }
 
 #include "eval.inl"

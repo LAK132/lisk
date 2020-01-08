@@ -38,17 +38,15 @@ namespace lisk
   {
     struct basic_functor
     {
-      using function_type = expression (*)(shared_list<expression>,
-                                           environment &);
+      using function_type = expression (*)(shared_list, environment &, bool);
       function_type function;
     };
 
     struct wrapped_functor
     {
       using function_type = void (*)();
-      using wrapper_type = expression (*)(function_type,
-                                          shared_list<expression>,
-                                          environment &);
+      using wrapper_type = expression (*)(function_type, shared_list,
+                                          environment &, bool);
       wrapper_type wrapper;
       function_type function;
     };
@@ -66,10 +64,12 @@ namespace lisk
     functor(wrapped_functor::wrapper_type w, wrapped_functor::function_type f);
 
     template<typename ...ARGS>
-    functor(expression (*f)(environment &, ARGS...))
+    functor(expression (*f)(environment &, bool, ARGS...))
     : functor(&wrapper_function<ARGS...>, (void(*)())f) {}
 
-    expression operator()(shared_list<expression> l, environment &e) const;
+    expression operator()(shared_list l,
+                          environment &e,
+                          bool allow_tail_eval) const;
   };
 
   string to_string(const functor &l);

@@ -39,13 +39,20 @@ namespace lisk
     _value.emplace<wrapped_functor>(wrapped_functor{w, f});
   }
 
-  expression functor::operator()(shared_list<expression> l,
-                                 environment &e) const
+  expression functor::operator()(shared_list l,
+                                 environment &e,
+                                 bool allow_tail_eval) const
   {
+    // lak::scoped_indenter indent("functor");
     if (std::holds_alternative<basic_functor>(_value))
     {
       if (auto &basic = std::get<basic_functor>(_value); basic.function)
-        return basic.function(l, e);
+      {
+        auto result = basic.function(l, e, allow_tail_eval);
+        if (allow_tail_eval && result.is_eval_list())
+          result = eval(result, e, allow_tail_eval);
+        return result;
+      }
       else
         return expression::null{};
     }
@@ -53,7 +60,12 @@ namespace lisk
     {
       if (auto &wrapped = std::get<wrapped_functor>(_value);
           wrapped.wrapper && wrapped.function)
-        return wrapped.wrapper(wrapped.function, l, e);
+      {
+        auto result = wrapped.wrapper(wrapped.function, l, e, allow_tail_eval);
+        if (allow_tail_eval && result.is_eval_list())
+          result = eval(result, e, allow_tail_eval);
+        return result;
+      }
       else
         return expression::null{};
     }

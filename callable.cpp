@@ -124,13 +124,15 @@ namespace lisk
     return std::get<functor>(*_value);
   }
 
-  expression callable::operator()(shared_list<expression> l,
-                                  environment &e) const
+  expression callable::operator()(shared_list l,
+                                  environment &e,
+                                  bool allow_tail_eval) const
   {
     if (is_null())
       return expression::null{};
     else
-      return std::visit([&l, &e](auto &&func) { return func(l, e); }, *_value);
+      return std::visit(
+        [&](auto &&func) { return func(l, e, allow_tail_eval); }, *_value);
   }
 
   string to_string(const callable &c)

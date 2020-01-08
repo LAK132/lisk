@@ -49,8 +49,6 @@ namespace lisk
 {
   extern const std::regex numeric_regex;
 
-  using list = shared_list<expression>;
-
   bool is_whitespace(const char c);
   bool is_bracket(const char c);
   bool is_numeric(const string &token);
@@ -66,44 +64,51 @@ namespace lisk
 
   namespace builtin
   {
-    expression list_env(environment &e);
-    expression null_check(environment &e, expression exp);
-    expression nil_check(environment &e, expression exp);
-    // expr equal_check(list l, environment &e);
-    expression conditional(environment &e, expression exp, uneval_expr cond,
-                           uneval_expr alt);
-    expression define(environment &e, symbol sym, expression exp);
-    expression evaluate(environment &e, expression exp);
-    expression begin(list l, environment &e);
-    expression repeat(environment &e, uint_t count, uneval_expr exp);
-    expression repeat_while(environment &e, uneval_expr exp);
-    expression foreach(environment &e, symbol sym, list iterlist,
-                       uneval_expr exp);
-    expression map(environment &e, list iterlist, uneval_expr exp);
+    expression list_env(environment &env, bool allow_tail);
+    expression null_check(environment &env, bool allow_tail, expression exp);
+    expression nil_check(environment &env, bool allow_tail, expression exp);
+    expression zero_check(environment &env, bool allow_tail, number num);
+    // expr equal_check(shared_list l, environment &env);
+    expression conditional(environment &env, bool allow_tail, expression exp,
+                           uneval_expr cond, uneval_expr alt);
+    expression define(environment &env, bool allow_tail, symbol sym,
+                      expression exp);
+    expression evaluate(environment &env, bool allow_tail, expression exp);
+    expression begin(shared_list l, environment &env, bool allow_tail);
+    expression repeat(environment &env, bool allow_tail, uint_t count,
+                      uneval_expr exp);
+    expression repeat_while(environment &env, bool allow_tail,
+                            uneval_expr exp);
+    expression foreach(environment &env, bool allow_tail, symbol sym,
+                       shared_list iterlist, uneval_expr exp);
+    expression map(environment &env, bool allow_tail, shared_list iterlist,
+                   uneval_expr exp);
+    expression tail_call(shared_list l, environment &env, bool allow_tail);
 
-    expression car(environment &e, list l);
-    expression cdr(environment &e, list l);
-    expression cons(environment &e, expression exp, list l);
-    expression join(list l, environment &e);
+    expression car(environment &env, bool allow_tail, shared_list l);
+    expression cdr(environment &env, bool allow_tail, shared_list l);
+    expression cons(environment &env, bool allow_tail, expression exp,
+                    shared_list l);
+    expression join(shared_list l, environment &env, bool allow_tail);
 
-    expression range_list(environment &e, number start, uint_t count,
-                          number step);
-    expression make_list(list l, environment &e);
-    expression make_lambda(list l, environment &e);
-    expression make_uint(environment &e, expression exp);
-    expression make_sint(environment &e, expression exp);
-    expression make_real(environment &e, expression exp);
-    expression make_string(environment &e, expression exp);
+    expression range_list(environment &env, bool allow_tail, number start,
+                          uint_t count, number step);
+    expression make_list(shared_list l, environment &env, bool allow_tail);
+    expression make_lambda(shared_list l, environment &env, bool allow_tail);
+    expression make_uint(environment &env, bool allow_tail, expression exp);
+    expression make_sint(environment &env, bool allow_tail, expression exp);
+    expression make_real(environment &env, bool allow_tail, expression exp);
+    expression make_string(environment &env, bool allow_tail, expression exp);
 
-    expression read_string(list, environment &);
-    expression parse_string(environment &e, string str);
-    expression print_string(list l, environment &e);
-    expression print_line(list l, environment &e);
+    expression read_string(shared_list, environment &, bool allow_tail);
+    expression parse_string(environment &env, bool allow_tail, string str);
+    expression print_string(shared_list l, environment &env, bool allow_tail);
+    expression print_line(shared_list l, environment &env, bool allow_tail);
 
-    expression add(list l, environment &e);
-    expression sub(list l, environment &e);
-    expression mul(list l, environment &e);
-    expression div(list l, environment &e);
+    expression add(shared_list l, environment &env, bool allow_tail);
+    expression sub(shared_list l, environment &env, bool allow_tail);
+    expression mul(shared_list l, environment &env, bool allow_tail);
+    expression div(shared_list l, environment &env, bool allow_tail);
 
     environment default_env();
   };

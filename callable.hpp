@@ -74,7 +74,9 @@ namespace lisk
     const functor &as_functor() const;
     functor &as_functor();
 
-    expression operator()(shared_list<expression> l, environment &e) const;
+    expression operator()(basic_shared_list<expression> l,
+                          environment &e,
+                          bool allow_tail_eval) const;
   };
 
   string to_string(const callable &c);

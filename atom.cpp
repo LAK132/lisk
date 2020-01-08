@@ -26,7 +26,7 @@ SOFTWARE.
 
 namespace lisk
 {
-  atom::atom(const nil)
+  atom::atom(nil)
   {
     _value.emplace<nil>();
   }

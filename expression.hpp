@@ -30,15 +30,24 @@ SOFTWARE.
 #include "string.hpp"
 #include "shared_list.hpp"
 
+#include "debug.hpp"
+
 #include <variant>
 
 namespace lisk
 {
+  struct expression;
+
+  using shared_list = basic_shared_list<expression>;
+
+  struct eval_shared_list { shared_list list; };
+  struct uneval_shared_list { shared_list list; };
+
   struct expression
   {
     struct null {};
 
-    std::variant<null, atom, shared_list<expression>, callable> _value;
+    std::variant<null, atom, eval_shared_list, shared_list, callable> _value;
 
     expression() = default;
     expression(const expression &expr) = default;
@@ -47,19 +56,24 @@ namespace lisk
     expression &operator=(const expression &expr) = default;
     expression &operator=(expression &&expr) = default;
 
-    expression(const null);
+    expression(null);
     expression(const atom &a);
-    expression(const shared_list<expression> &list);
+    expression(atom::nil);
+    expression(const shared_list &list);
+    expression(const eval_shared_list &list);
     expression(const callable &c);
 
     expression &operator=(null);
     expression &operator=(const atom &a);
-    expression &operator=(const shared_list<expression> &list);
+    expression &operator=(atom::nil);
+    expression &operator=(const shared_list &list);
+    expression &operator=(const eval_shared_list &list);
     expression &operator=(const callable &c);
 
     bool is_null() const;
     bool is_atom() const;
     bool is_list() const;
+    bool is_eval_list() const;
     bool is_callable() const;
 
     inline bool empty() const { return is_null(); }
@@ -68,8 +82,11 @@ namespace lisk
     const atom *get_atom() const;
     atom *get_atom();
 
-    const shared_list<expression> *get_list() const;
-    shared_list<expression> *get_list();
+    const shared_list *get_list() const;
+    shared_list *get_list();
+
+    const eval_shared_list *get_eval_list() const;
+    eval_shared_list *get_eval_list();
 
     const callable *get_callable() const;
     callable *get_callable();
@@ -77,8 +94,11 @@ namespace lisk
     const atom &as_atom() const;
     atom &as_atom();
 
-    const shared_list<expression> &as_list() const;
-    shared_list<expression> &as_list();
+    const shared_list &as_list() const;
+    shared_list &as_list();
+
+    const eval_shared_list &as_eval_list() const;
+    eval_shared_list &as_eval_list();
 
     const callable &as_callable() const;
     callable &as_callable();
@@ -90,7 +110,16 @@ namespace lisk
     auto visit(LAMBDA &&lambda) { return std::visit(lambda, _value); }
   };
 
+  struct eval_expr { expression expr; };
+  struct uneval_expr { expression expr; };
+
   string to_string(const expression &expr);
+
+  // string to_string(const eval_expr &expr);
+  // string to_string(const uneval_expr &expr);
+
+  string to_string(const eval_shared_list &list);
+  string to_string(const uneval_shared_list &list);
 }
 
 #endif

@@ -45,7 +45,7 @@ namespace lisk
     atom &operator=(const atom &expr) = default;
     atom &operator=(atom &&expr) = default;
 
-    atom(const nil);
+    atom(nil);
     atom(const symbol &sym);
     atom(const string &str);
     atom(const number &num);

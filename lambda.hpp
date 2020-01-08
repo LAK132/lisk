@@ -34,16 +34,19 @@ namespace lisk
 {
   struct lambda
   {
-    shared_list<expression> params;
-    shared_list<expression> exp;
+    shared_list params;
+    shared_list exp;
+    environment captured_env;
 
     lambda() = default;
     lambda(const lambda &) = default;
     lambda &operator=(const lambda &) = default;
 
-    lambda(shared_list<expression> l, environment &e);
+    lambda(shared_list l, environment &e, bool allow_tail_eval);
 
-    expression operator()(shared_list<expression> l, environment &e) const;
+    expression operator()(shared_list l,
+                          environment &e,
+                          bool allow_tail_eval) const;
   };
 
   string to_string(const lambda &l);
