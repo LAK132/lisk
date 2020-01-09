@@ -52,13 +52,13 @@ int main(int argc, char **argv)
                        "(if (zero? n)"
                          "x"
                          "(tail (func (* x 2) (- n 1)))"
-                         ")"
                        ")"
                      ")"
-        ")"
+                   ")"
+      ")"
       "(println (func 2 10))"
       "(exit)"
-      ")";
+    ")";
 
   std::cout <<
     lisk::to_string(lisk::eval(lisk::parse(lisk::tokenise(str)), default_env, true));
