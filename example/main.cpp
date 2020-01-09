@@ -27,6 +27,39 @@ SOFTWARE.
 
 #include <iostream>
 
+// Create a new type.
+struct my_type
+{
+  lisk::uint_t value;
+};
+
+// Define the function to convert a lisk expression into our new type.
+bool operator>>(const lisk::expression &arg, my_type &out)
+{
+  return arg >> out.value;
+}
+
+// Define the function to get a string name of our new type.
+const lisk::string &type_name(const my_type &)
+{
+  const static lisk::string name = "my_type";
+  return name;
+}
+
+// Mark our new type as being immediately-get-able and eval-able.
+template<>
+struct lisk::list_reader_traits<my_type>
+: public lisk::basic_list_reader_traits<true, true> {};
+
+// We can now use this new type in as a function parameter!
+lisk::expression my_function(lisk::environment &e, bool, my_type my)
+{
+  std::cout << "My type value: " << my.value << "\n";
+  return lisk::expression{lisk::atom::nil{}};
+}
+
+
+
 bool running = true;
 
 lisk::expression exit(lisk::environment &e, bool)
@@ -40,15 +73,21 @@ int main(int argc, char **argv)
   using namespace std::string_literals;
 
   lisk::environment default_env = lisk::builtin::default_env();
-
   default_env.define_functor("exit", exit);
 
-  std::string str =
+  // Add the function using our new type to the lisk environment.
+  default_env.define_functor("my_func", my_function);
+
+  // Should print "My type value: 10".
+  lisk::eval_string("(my_func 10)", default_env);
+
+  // Should print "2048"
+  lisk::eval_string(
     "(begin"
       "(define func (lambda (x n)"
                      "(begin"
-                       "(println \"Called func\")"
-                       "(println (list x n))"
+                      //  "(println \"Called func\")"
+                      //  "(println (list x n))"
                        "(if (zero? n)"
                          "x"
                          "(tail (func (* x 2) (- n 1)))"
@@ -57,12 +96,10 @@ int main(int argc, char **argv)
                    ")"
       ")"
       "(println (func 2 10))"
-      "(exit)"
-    ")";
+      // "(exit)"
+    ")", default_env);
 
-  std::cout <<
-    lisk::to_string(lisk::eval(lisk::parse(lisk::tokenise(str)), default_env, true));
-
+  // REPL. Use "(exit)" to quit the program.
   while (running)
   {
     std::cout << "lisk> ";

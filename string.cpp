@@ -24,11 +24,19 @@ SOFTWARE.
 
 #include "string.hpp"
 
+#include "expression.hpp"
+
 namespace lisk
 {
   string to_string(const symbol &sym)
   {
     return sym;
+  }
+
+  const string &type_name(const symbol &)
+  {
+    const static string name = "symbol";
+    return name;
   }
 
   string to_string(const string &str)
@@ -47,4 +55,26 @@ namespace lisk
 
     return "\"" + result + "\"";
   }
+
+  const string &type_name(const string &)
+  {
+    const static string name = "string";
+    return name;
+  }
+}
+
+bool operator>>(const lisk::expression &arg, lisk::symbol &out)
+{
+  if (!arg.is_atom() || !arg.as_atom().is_symbol()) return false;
+
+  out = arg.as_atom().as_symbol();
+  return true;
+}
+
+bool operator>>(const lisk::expression &arg, lisk::string &out)
+{
+  if (!arg.is_atom() || !arg.as_atom().is_string()) return false;
+
+  out = arg.as_atom().as_string();
+  return true;
 }

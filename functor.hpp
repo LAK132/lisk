@@ -73,6 +73,9 @@ namespace lisk
   };
 
   string to_string(const functor &l);
+  const string &type_name(const functor &);
 }
+
+bool operator>>(const lisk::expression &arg, lisk::functor &out);
 
 #endif

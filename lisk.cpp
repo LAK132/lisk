@@ -296,6 +296,11 @@ namespace lisk
     return expression{root};
   }
 
+  expression eval_string(const string &str, environment &env)
+  {
+    return eval(parse(tokenise(str)), env, true);
+  }
+
   namespace builtin
   {
     expression list_env(environment &env, bool allow_tail)
@@ -418,7 +423,7 @@ namespace lisk
                    uneval_expr exp)
     {
       auto subexp = eval(exp.expr, env, allow_tail);
-      if (functor f; get_arg_as(subexp, f))
+      if (functor f; subexp >> f)
       {
         auto arg = shared_list::create();
         auto result = shared_list::create();
@@ -431,7 +436,7 @@ namespace lisk
         }
         return ++result;
       }
-      else if (lambda lf; get_arg_as(subexp, lf))
+      else if (lambda lf; subexp  >> lf)
       {
         auto arg = shared_list::create();
         auto result = shared_list::create();
@@ -507,27 +512,28 @@ namespace lisk
     {
       shared_list first;
       shared_list end;
-      if (eval_arg_as(l.value(), env, allow_tail, first))
+
+      if (eval(l.value(), env, allow_tail) >> first)
       {
         end = first.last();
       }
       else
       {
-        ERROR("join failed, argument '" << to_string(l.value()) <<"' "
+        ERROR("join failed, argument '" << to_string(l.value()) << "' "
               "is not a list");
         return expression::null{};
       }
 
       for (const auto &node : l.next())
       {
-        if (shared_list next; eval_arg_as(node.value, env, allow_tail, next))
+        if (shared_list next; eval(node.value, env, allow_tail) >> next)
         {
           end.set_next(next);
           end = next.last();
         }
         else
         {
-          ERROR("join failed, argument '" << to_string(node.value) <<"' "
+          ERROR("join failed, argument '" << to_string(node.value) << "' "
                 "is not a list");
           return expression::null{};
         }
@@ -562,9 +568,9 @@ namespace lisk
     expression make_uint(environment &env, bool allow_tail, expression exp)
     {
       auto to_uint = [](auto && n) -> number { return uint_t(n); };
-      if (number n; get_arg_as(exp, n))
+      if (number n; exp >> n)
         return atom{n.visit(to_uint)};
-      else if (string s; get_arg_as(exp, s))
+      else if (string s; exp >> s)
         return atom{parse_number(s).visit(to_uint)};
       else
         return atom{parse_number(to_string(exp)).visit(to_uint)};
@@ -573,9 +579,9 @@ namespace lisk
     expression make_sint(environment &env, bool allow_tail, expression exp)
     {
       auto to_sint = [](auto && n) -> number { return sint_t(n); };
-      if (number n; get_arg_as(exp, n))
+      if (number n; exp >> n)
         return atom{n.visit(to_sint)};
-      else if (string s; get_arg_as(exp, s))
+      else if (string s; exp >> s)
         return atom{parse_number(s).visit(to_sint)};
       else
         return atom{parse_number(to_string(exp)).visit(to_sint)};
@@ -584,9 +590,9 @@ namespace lisk
     expression make_real(environment &env, bool allow_tail, expression exp)
     {
       auto to_real = [](auto && n) -> number { return (real_t)(n); };
-      if (number n; get_arg_as(exp, n))
+      if (number n; exp >> n)
         return atom{n.visit(to_real)};
-      else if (string s; get_arg_as(exp, s))
+      else if (string s; exp >> s)
         return atom{parse_number(s).visit(to_real)};
       else
         return atom{parse_number(to_string(exp)).visit(to_real)};
@@ -594,7 +600,7 @@ namespace lisk
 
     expression make_string(environment &env, bool allow_tail, expression exp)
     {
-      if (string s; get_arg_as(exp, s))
+      if (string s; exp >> s)
         return expression(s);
       else
         return expression(string{to_string(exp)});
@@ -619,7 +625,7 @@ namespace lisk
       expression result = eval(l.value(), env, allow_tail);
       // If the list evaluates to a pure string, then print it verbatim.
       // Otherwise to_string the result.
-      if (string str; get_arg_as(result, str))
+      if (string str; result >> str)
         std::cout << str;
       else
         std::cout << to_string(result);
@@ -635,7 +641,7 @@ namespace lisk
       expression result = eval(l.value(), env, allow_tail);
       // If the list evaluates to a pure string, then print it verbatim.
       // Otherwise to_string the result.
-      if (string str; get_arg_as(result, str))
+      if (string str; result >> str)
         std::cout << str << "\n";
       else
         std::cout << to_string(result) << "\n";
@@ -648,7 +654,7 @@ namespace lisk
 
       number result;
 
-      if (number n; eval_arg_as(l.value(), env, allow_tail, n))
+      if (number n; eval(l.value(), env, allow_tail) >> n)
       {
         result = n;
       }
@@ -661,7 +667,7 @@ namespace lisk
 
       for (const auto &it : l.next())
       {
-        if (number n; eval_arg_as(it.value, env, allow_tail, n))
+        if (number n; eval(it.value, env, allow_tail) >> n)
         {
           result += n;
         }
@@ -681,7 +687,7 @@ namespace lisk
 
       number result;
 
-      if (number n; eval_arg_as(l.value(), env, allow_tail, n))
+      if (number n; eval(l.value(), env, allow_tail) >> n)
       {
         result = n;
       }
@@ -694,7 +700,7 @@ namespace lisk
 
       for (const auto &it : l.next())
       {
-        if (number n; eval_arg_as(it.value, env, allow_tail, n))
+        if (number n; eval(it.value, env, allow_tail) >> n)
         {
           result -= n;
         }
@@ -714,7 +720,7 @@ namespace lisk
 
       number result;
 
-      if (number n; eval_arg_as(l.value(), env, allow_tail, n))
+      if (number n; eval(l.value(), env, allow_tail) >> n)
       {
         result = n;
       }
@@ -727,7 +733,7 @@ namespace lisk
 
       for (const auto &it : l.next())
       {
-        if (number n; eval_arg_as(it.value, env, allow_tail, n))
+        if (number n; eval(it.value, env, allow_tail) >> n)
         {
           result *= n;
         }
@@ -747,7 +753,7 @@ namespace lisk
 
       number result;
 
-      if (number n; eval_arg_as(l.value(), env, allow_tail, n))
+      if (number n; eval(l.value(), env, allow_tail) >> n)
       {
         result = n;
       }
@@ -760,7 +766,7 @@ namespace lisk
 
       for (const auto &it : l.next())
       {
-        if (number n; eval_arg_as(it.value, env, allow_tail, n))
+        if (number n; eval(it.value, env, allow_tail) >> n)
         {
           result /= n;
         }

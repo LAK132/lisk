@@ -78,4 +78,18 @@ namespace lisk
     }
     else return to_string(expression::null{});
   }
+
+  const string &type_name(const functor &)
+  {
+    const static string name = "functor";
+    return name;
+  }
+}
+
+bool operator>>(const lisk::expression &arg, lisk::functor &out)
+{
+  if (!arg.is_callable() || !arg.as_callable().is_functor()) return false;
+
+  out = arg.as_callable().as_functor();
+  return true;
 }

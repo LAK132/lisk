@@ -48,25 +48,26 @@ namespace lisk
   {
     if (exp.is_eval_list())
     {
+      if (!allow_tail_eval) return exp;
+
       auto result = exp;
-      while (allow_tail_eval && result.is_eval_list() &&
-             result.as_eval_list().list.value().is_callable())
-      {
-        result = eval(
-          result.as_eval_list().list.value().as_callable()({}, e, false),
-          e, false);
-      }
+
+      for (callable c;
+           result.is_eval_list() &&
+           result.as_eval_list().list.value() >> c;
+           result = eval(c({}, e, false), e, false));
+
       return result;
     }
-    else if (symbol sym; get_arg_as(exp, sym))
+    else if (symbol sym; exp >> sym)
     {
       return e[sym];
     }
-    else if (atom a; get_arg_as(exp, a))
+    else if (atom a; exp >> a)
     {
       return a;
     }
-    else if (shared_list l; get_arg_as(exp, l))
+    else if (shared_list l; exp >> l)
     {
       // If we're about do do a function call, this should evalutate the symbol
       // to the relevant function pointer.
@@ -78,20 +79,20 @@ namespace lisk
       {
         return atom::nil{};
       }
-      else if (get_arg_as(subexp, sym))
+      else if (subexp >> sym)
       {
         return e[sym];
       }
-      else if (get_arg_as(subexp, a))
+      else if (subexp >> a)
       {
         return a;
       }
-      else if (shared_list l2; get_arg_as(subexp, l2))
+      else if (shared_list l2; subexp >> l2)
       {
         // :TODO: Comment on why we would ever end up here?
         return l2;
       }
-      else if (callable c; get_arg_as(subexp, c))
+      else if (callable c; subexp >> c)
       {
         return c(l.next(), e, allow_tail_eval);
       }
@@ -107,251 +108,9 @@ namespace lisk
     else
     {
       ERROR("Failed to eval expression '" << to_string(exp) << "' type '"
-            << exp.visit([](auto &&a){return type_name<decltype(a)>();})
+            << exp.visit([](auto &&a) { return type_name(a); })
             << "'");
       return expression::null{};
     }
-  }
-
-  bool get_arg_as(const expression &in_expr, expression &out_arg)
-  {
-    out_arg = in_expr;
-    return true;
-  }
-
-  bool get_arg_as(const expression &in_expr, uneval_expr &out_arg)
-  {
-    out_arg = {in_expr};
-    return true;
-  }
-
-  bool get_arg_as(const expression &in_expr, shared_list &out_arg)
-  {
-    if (in_expr.is_list())
-    {
-      out_arg = in_expr.as_list();
-      return true;
-    }
-    return false;
-  }
-
-  bool get_arg_as(const expression &in_expr, uneval_shared_list &out_arg)
-  {
-    if (in_expr.is_list())
-    {
-      out_arg = {in_expr.as_list()};
-      return true;
-    }
-    return false;
-  }
-
-  bool get_arg_as(const expression &in_expr, callable &out_arg)
-  {
-    if (in_expr.is_callable())
-    {
-      out_arg = in_expr.as_callable();
-      return true;
-    }
-    return false;
-  }
-
-  bool get_arg_as(const expression &in_expr, functor &out_arg)
-  {
-    if (in_expr.is_callable() && in_expr.as_callable().is_functor())
-    {
-      out_arg = in_expr.as_callable().as_functor();
-      return true;
-    }
-    return false;
-  }
-
-  bool get_arg_as(const expression &in_expr, lambda &out_arg)
-  {
-    if (in_expr.is_callable() && in_expr.as_callable().is_lambda())
-    {
-      out_arg = in_expr.as_callable().as_lambda();
-      return true;
-    }
-    return false;
-  }
-
-  bool get_arg_as(const expression &in_expr, atom &out_arg)
-  {
-    if (in_expr.is_atom())
-    {
-      out_arg = in_expr.as_atom();
-      return true;
-    }
-    return false;
-  }
-
-  bool get_arg_as(const expression &in_expr, symbol &out_arg)
-  {
-    if (in_expr.is_atom() && in_expr.as_atom().is_symbol())
-    {
-      out_arg = in_expr.as_atom().as_symbol();
-      return true;
-    }
-    return false;
-  }
-
-  bool get_arg_as(const expression &in_expr, string &out_arg)
-  {
-    if (in_expr.is_atom() && in_expr.as_atom().is_string())
-    {
-      out_arg = in_expr.as_atom().as_string();
-      return true;
-    }
-    return false;
-  }
-
-  bool get_arg_as(const expression &in_expr, number &out_arg)
-  {
-    if (in_expr.is_atom() && in_expr.as_atom().is_number())
-    {
-      out_arg = in_expr.as_atom().as_number();
-      return true;
-    }
-    return false;
-  }
-
-  bool get_arg_as(const expression &in_expr, uint_t &out_arg)
-  {
-    if (in_expr.is_atom() &&
-        in_expr.as_atom().is_number() &&
-        in_expr.as_atom().as_number().is_uint())
-    {
-      out_arg = in_expr.as_atom().as_number().as_uint();
-      return true;
-    }
-    return false;
-  }
-
-  bool get_arg_as(const expression &in_expr, sint_t &out_arg)
-  {
-    if (in_expr.is_atom() &&
-        in_expr.as_atom().is_number() &&
-        in_expr.as_atom().as_number().is_sint())
-    {
-      out_arg = in_expr.as_atom().as_number().as_sint();
-      return true;
-    }
-    return false;
-  }
-
-  bool get_arg_as(const expression &in_expr, real_t &out_arg)
-  {
-    if (in_expr.is_atom() &&
-        in_expr.as_atom().is_number() &&
-        in_expr.as_atom().as_number().is_real())
-    {
-      out_arg = in_expr.as_atom().as_number().as_real();
-      return true;
-    }
-    return false;
-  }
-
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, expression &out_arg)
-  {
-    return eval_arg_as(in_expr, e, allow_tail, out_arg);
-  }
-
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, uneval_expr &out_arg)
-  {
-    return get_arg_as(in_expr, out_arg);
-  }
-
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, shared_list &out_arg)
-  {
-    return eval_arg_as(in_expr, e, allow_tail, out_arg);
-  }
-
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, uneval_shared_list &out_arg)
-  {
-    return get_arg_as(in_expr, out_arg);
-  }
-
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, callable &out_arg)
-  {
-    return
-      get_arg_as(in_expr, out_arg) ||
-      eval_arg_as(in_expr, e, allow_tail, out_arg);
-  }
-
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, functor &out_arg)
-  {
-    return
-      get_arg_as(in_expr, out_arg) ||
-      eval_arg_as(in_expr, e, allow_tail, out_arg);
-  }
-
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, lambda &out_arg)
-  {
-    return
-      get_arg_as(in_expr, out_arg) ||
-      eval_arg_as(in_expr, e, allow_tail, out_arg);
-  }
-
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, atom &out_arg)
-  {
-    return
-      get_arg_as(in_expr, out_arg) ||
-      eval_arg_as(in_expr, e, allow_tail, out_arg);
-  }
-
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, symbol &out_arg)
-  {
-    return
-      get_arg_as(in_expr, out_arg) ||
-      eval_arg_as(in_expr, e, allow_tail, out_arg);
-  }
-
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, string &out_arg)
-  {
-    return
-      get_arg_as(in_expr, out_arg) ||
-      eval_arg_as(in_expr, e, allow_tail, out_arg);
-  }
-
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, number &out_arg)
-  {
-    return
-      get_arg_as(in_expr, out_arg) ||
-      eval_arg_as(in_expr, e, allow_tail, out_arg);
-  }
-
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, uint_t &out_arg)
-  {
-    return
-      get_arg_as(in_expr, out_arg) ||
-      eval_arg_as(in_expr, e, allow_tail, out_arg);
-  }
-
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, sint_t &out_arg)
-  {
-    return
-      get_arg_as(in_expr, out_arg) ||
-      eval_arg_as(in_expr, e, allow_tail, out_arg);
-  }
-
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, real_t &out_arg)
-  {
-    return
-      get_arg_as(in_expr, out_arg) ||
-      eval_arg_as(in_expr, e, allow_tail, out_arg);
   }
 }

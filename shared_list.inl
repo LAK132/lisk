@@ -249,4 +249,11 @@ namespace lisk
 
     return result;
   }
+
+  template<typename T>
+  const string &type_name(const basic_shared_list<T> &)
+  {
+    const static string name = "basic_shared_list<" + type_name(T{}) + ">";
+    return name;
+  }
 }

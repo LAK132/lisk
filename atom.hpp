@@ -32,6 +32,8 @@ SOFTWARE.
 
 namespace lisk
 {
+  struct expression;
+
   struct atom
   {
     struct nil {};
@@ -86,7 +88,13 @@ namespace lisk
   };
 
   string to_string(atom::nil);
+  const string &type_name(atom::nil);
+
   string to_string(const atom &a);
+  const string &type_name(const atom &);
 }
+
+bool operator>>(const lisk::expression &arg, lisk::atom::nil);
+bool operator>>(const lisk::expression &arg, lisk::atom &out);
 
 #endif

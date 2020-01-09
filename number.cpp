@@ -24,6 +24,8 @@ SOFTWARE.
 
 #include "number.hpp"
 
+#include "expression.hpp"
+
 #include "strconv/tostring.hpp"
 
 #include <variant>
@@ -159,15 +161,90 @@ namespace lisk
   string to_string(const number &num)
   {
     if (std::holds_alternative<uint_t>(num._value))
-      return lak::to_string(std::get<uint_t>(num._value));
+      return lisk::to_string(std::get<uint_t>(num._value));
+
     if (std::holds_alternative<sint_t>(num._value))
-      return (std::get<sint_t>(num._value) >= 0 ? "+" : "") +
-        lak::to_string(std::get<sint_t>(num._value));
+      return lisk::to_string(std::get<sint_t>(num._value));
+
     if (std::holds_alternative<real_t>(num._value))
-      return (std::get<real_t>(num._value) >= 0.0 ? "+" : "") +
-        lak::to_string(std::get<real_t>(num._value));
+      return lisk::to_string(std::get<real_t>(num._value));
+
     return "<NaN>";
   }
+
+  const string &type_name(const number &)
+  {
+    const static string name = "number";
+    return name;
+  }
+
+  string to_string(uint_t num)
+  {
+    return lak::to_string(num);
+  }
+
+  const string &type_name(uint_t)
+  {
+    const static string name = "uint";
+    return name;
+  }
+
+  string to_string(sint_t num)
+  {
+    return (num >= 0 ? "+" : "") + lak::to_string(num);
+  }
+
+  const string &type_name(sint_t)
+  {
+    const static string name = "sint";
+    return name;
+  }
+
+  string to_string(real_t num)
+  {
+    return (num >= 0.0 ? "+" : "") + lak::to_string(num);
+  }
+
+  const string &type_name(real_t)
+  {
+    const static string name = "real";
+    return name;
+  }
+}
+
+bool operator>>(const lisk::expression &arg, lisk::number &out)
+{
+  if (!arg.is_atom() || !arg.as_atom().is_number()) return false;
+
+  out = arg.as_atom().as_number();
+  return true;
+}
+
+bool operator>>(const lisk::expression &arg, lisk::uint_t &out)
+{
+  if (!arg.is_atom() || !arg.as_atom().is_number() ||
+      !arg.as_atom().as_number().is_uint()) return false;
+
+  out = arg.as_atom().as_number().as_uint();
+  return true;
+}
+
+bool operator>>(const lisk::expression &arg, lisk::sint_t &out)
+{
+  if (!arg.is_atom() || !arg.as_atom().is_number() ||
+      !arg.as_atom().as_number().is_sint()) return false;
+
+  out = arg.as_atom().as_number().as_sint();
+  return true;
+}
+
+bool operator>>(const lisk::expression &arg, lisk::real_t &out)
+{
+  if (!arg.is_atom() || !arg.as_atom().is_number() ||
+      !arg.as_atom().as_number().is_real()) return false;
+
+  out = arg.as_atom().as_number().as_real();
+  return true;
 }
 
 lisk::number operator+(lisk::number A, lisk::number B)

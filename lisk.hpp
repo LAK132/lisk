@@ -62,6 +62,9 @@ namespace lisk
   string parse_string(const string &token);
   expression parse(const std::vector<string> &tokens);
 
+  // Top level eval function.
+  expression eval_string(const string &str, environment &env);
+
   namespace builtin
   {
     expression list_env(environment &env, bool allow_tail);

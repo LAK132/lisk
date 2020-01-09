@@ -113,13 +113,30 @@ namespace lisk
   struct eval_expr { expression expr; };
   struct uneval_expr { expression expr; };
 
-  string to_string(const expression &expr);
-
-  // string to_string(const eval_expr &expr);
-  // string to_string(const uneval_expr &expr);
+  const string &type_name(const shared_list &);
 
   string to_string(const eval_shared_list &list);
+  const string &type_name(const eval_shared_list &);
+
   string to_string(const uneval_shared_list &list);
+  const string &type_name(const uneval_shared_list &);
+
+  string to_string(expression::null);
+  const string &type_name(expression::null);
+
+  string to_string(const expression &expr);
+  const string &type_name(const expression &);
+
+  // string to_string(const eval_expr &expr);
+  const string &type_name(const eval_expr &);
+
+  // string to_string(const uneval_expr &expr);
+  const string &type_name(const uneval_expr &);
 }
+
+bool operator>>(const lisk::expression &arg, lisk::expression &out);
+bool operator>>(const lisk::expression &arg, lisk::uneval_expr &out);
+bool operator>>(const lisk::expression &arg, lisk::shared_list &out);
+bool operator>>(const lisk::expression &arg, lisk::uneval_shared_list &out);
 
 #endif

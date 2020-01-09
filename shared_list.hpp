@@ -85,6 +85,9 @@ namespace lisk
 
   template<typename T>
   string to_string(basic_shared_list<T> list);
+
+  template<typename T>
+  const string &type_name(const basic_shared_list<T> &);
 }
 
 #include "shared_list.inl"

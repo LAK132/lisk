@@ -40,64 +40,98 @@ namespace lisk
   shared_list eval_all(shared_list l, environment &e, bool allow_tail_eval);
   expression eval(const expression &exp, environment &e, bool allow_tail_eval);
 
-  template<typename T, typename U =
-    std::remove_cv_t<std::remove_reference_t<T>>>
-  string type_name();
-
-  bool get_arg_as(const expression &in_expr, expression &out_arg);
-  bool get_arg_as(const expression &in_expr, uneval_expr &out_arg);
-  bool get_arg_as(const expression &in_expr, shared_list &out_arg);
-  bool get_arg_as(const expression &in_expr, uneval_shared_list &out_arg);
-  bool get_arg_as(const expression &in_expr, callable &out_arg);
-  bool get_arg_as(const expression &in_expr, functor &out_arg);
-  bool get_arg_as(const expression &in_expr, lambda &out_arg);
-  bool get_arg_as(const expression &in_expr, atom &out_arg);
-  bool get_arg_as(const expression &in_expr, symbol &out_arg);
-  bool get_arg_as(const expression &in_expr, string &out_arg);
-  bool get_arg_as(const expression &in_expr, number &out_arg);
-  bool get_arg_as(const expression &in_expr, uint_t &out_arg);
-  bool get_arg_as(const expression &in_expr, sint_t &out_arg);
-  bool get_arg_as(const expression &in_expr, real_t &out_arg);
-
   template<typename T>
-  bool eval_arg_as(const expression &in_expr, environment &e, bool allow_tail,
-                   T &out_arg)
-  {
-    using type = std::remove_cv_t<std::remove_reference_t<T>>;
-    static_assert(!std::is_same_v<type, uneval_expr> &&
-                  !std::is_same_v<type, uneval_shared_list>,
-                  "Cannot eval-as uneval types");
-    return get_arg_as(eval(in_expr, e, allow_tail), out_arg);
-  }
+  struct list_reader_traits;
 
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, expression &out_arg);
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, uneval_expr &out_arg);
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, shared_list &out_arg);
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, uneval_shared_list &out_arg);
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, callable &out_arg);
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, functor &out_arg);
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, lambda &out_arg);
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, atom &out_arg);
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, symbol &out_arg);
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, string &out_arg);
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, number &out_arg);
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, uint_t &out_arg);
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, sint_t &out_arg);
-  bool get_or_eval_arg_as(const expression &in_expr, environment &e,
-                          bool allow_tail, real_t &out_arg);
+  template<bool GET, bool EVAL>
+  struct basic_list_reader_traits
+  {
+    static constexpr bool allow_get = GET;
+    static constexpr bool allow_eval = EVAL;
+  };
+
+  template<>
+  struct list_reader_traits<atom::nil>
+  : public basic_list_reader_traits<true, true> {};
+
+  template<>
+  struct list_reader_traits<atom>
+  : public basic_list_reader_traits<true, true> {};
+
+  template<>
+  struct list_reader_traits<callable>
+  : public basic_list_reader_traits<true, true> {};
+
+  template<>
+  struct list_reader_traits<functor>
+  : public basic_list_reader_traits<true, true> {};
+
+  template<>
+  struct list_reader_traits<lambda>
+  : public basic_list_reader_traits<true, true> {};
+
+  template<>
+  struct list_reader_traits<shared_list>
+  : public basic_list_reader_traits<false, true> {};
+
+  template<>
+  struct list_reader_traits<eval_shared_list>
+  : public basic_list_reader_traits<false, true> {};
+
+  template<>
+  struct list_reader_traits<uneval_shared_list>
+  : public basic_list_reader_traits<true, false> {};
+
+  template<>
+  struct list_reader_traits<expression>
+  : public basic_list_reader_traits<false, true> {};
+
+  template<>
+  struct list_reader_traits<eval_expr>
+  : public basic_list_reader_traits<false, true> {};
+
+  template<>
+  struct list_reader_traits<uneval_expr>
+  : public basic_list_reader_traits<true, false> {};
+
+  template<>
+  struct list_reader_traits<symbol>
+  : public basic_list_reader_traits<true, true> {};
+
+  template<>
+  struct list_reader_traits<number>
+  : public basic_list_reader_traits<true, true> {};
+
+  template<>
+  struct list_reader_traits<uint_t>
+  : public basic_list_reader_traits<true, true> {};
+
+  template<>
+  struct list_reader_traits<sint_t>
+  : public basic_list_reader_traits<true, true> {};
+
+  template<>
+  struct list_reader_traits<real_t>
+  : public basic_list_reader_traits<true, true> {};
+
+  template<>
+  struct list_reader_traits<string>
+  : public basic_list_reader_traits<true, true> {};
+
+  struct list_reader
+  {
+    shared_list list;
+    environment env;
+    bool allow_tail_eval;
+
+    list_reader(shared_list l, environment e, bool allow_tail)
+    : list(l), env(e), allow_tail_eval(allow_tail) {}
+
+    inline operator bool() const { return list; }
+
+    template<typename T>
+    bool operator>>(T &out);
+  };
 
   template<typename ...ARGS>
   expression wrapper_function(void (*func)(), shared_list l,

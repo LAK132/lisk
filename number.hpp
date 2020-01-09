@@ -31,6 +31,8 @@ SOFTWARE.
 
 namespace lisk
 {
+  struct expression;
+
   using uint_t = unsigned long long;
   using sint_t = signed long long;
   using real_t = long double;
@@ -82,7 +84,22 @@ namespace lisk
   };
 
   string to_string(const number &num);
+  const string &type_name(const number &);
+
+  string to_string(uint_t num);
+  const string &type_name(uint_t);
+
+  string to_string(sint_t num);
+  const string &type_name(sint_t);
+
+  string to_string(real_t num);
+  const string &type_name(real_t);
 }
+
+bool operator>>(const lisk::expression &arg, lisk::number &out);
+bool operator>>(const lisk::expression &arg, lisk::uint_t &out);
+bool operator>>(const lisk::expression &arg, lisk::sint_t &out);
+bool operator>>(const lisk::expression &arg, lisk::real_t &out);
 
 lisk::number operator+(lisk::number A, lisk::number B);
 lisk::number operator-(lisk::number A, lisk::number B);

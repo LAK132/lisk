@@ -26,6 +26,7 @@ SOFTWARE.
 
 #include "lambda.hpp"
 #include "functor.hpp"
+#include "expression.hpp"
 
 #include "strconv/tostring.hpp"
 
@@ -149,4 +150,18 @@ namespace lisk
       return std::visit([](auto &&func) { return to_string(func); },
                         *c._value);
   }
+
+  const string &type_name(const callable &)
+  {
+    const static string name = "callable";
+    return name;
+  }
+}
+
+bool operator>>(const lisk::expression &arg, lisk::callable &out)
+{
+  if (!arg.is_callable()) return false;
+
+  out = arg.as_callable();
+  return true;
 }

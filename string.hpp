@@ -29,6 +29,8 @@ SOFTWARE.
 
 namespace lisk
 {
+  struct expression;
+
   struct symbol : public std::string
   {
     symbol() = default;
@@ -76,8 +78,14 @@ namespace lisk
   };
 
   string to_string(const symbol &sym);
+  const string &type_name(const symbol &);
+
   string to_string(const string &str);
+  const string &type_name(const string &);
 }
+
+bool operator>>(const lisk::expression &arg, lisk::symbol &out);
+bool operator>>(const lisk::expression &arg, lisk::string &out);
 
 template<> struct std::hash<lisk::symbol> : public std::hash<std::string> {};
 template<> struct std::hash<lisk::string> : public std::hash<std::string> {};

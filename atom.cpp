@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include "atom.hpp"
+#include "expression.hpp"
 
 namespace lisk
 {
@@ -173,8 +174,33 @@ namespace lisk
     return "nil";
   }
 
+  const string &type_name(atom::nil)
+  {
+    const static string name = "nill";
+    return name;
+  }
+
   string to_string(const atom &a)
   {
     return a.visit([](auto &&a) { return to_string(a); });
   }
+
+  const string &type_name(const atom &)
+  {
+    const static string name = "atom";
+    return name;
+  }
+}
+
+bool operator>>(const lisk::expression &arg, lisk::atom::nil)
+{
+  return arg.is_atom() && arg.as_atom().is_nil();
+}
+
+bool operator>>(const lisk::expression &arg, lisk::atom &out)
+{
+  if (!arg.is_atom()) return false;
+
+  out = arg.as_atom();
+  return true;
 }

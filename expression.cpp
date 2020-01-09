@@ -223,9 +223,10 @@ namespace lisk
     return std::get<callable>(_value);
   }
 
-  string to_string(const expression &expr)
+  const string &type_name(const shared_list &)
   {
-    return expr.visit([](auto &&a) { return to_string(a); });
+    const static string name = "list";
+    return name;
   }
 
   string to_string(const eval_shared_list &list)
@@ -233,8 +234,82 @@ namespace lisk
     return "<EVAL " + to_string((const shared_list&)list) + ">";
   }
 
+  const string &type_name(const eval_shared_list &)
+  {
+    const static string name = "<EVAL LIST>";
+    return name;
+  }
+
   string to_string(const uneval_shared_list &list)
   {
     return "<UNEVAL " + to_string((const shared_list&)list) + ">";
   }
+
+  const string &type_name(const uneval_shared_list &)
+  {
+    const static string name = "<UNEVAL LIST>";
+    return name;
+  }
+
+  string to_string(const expression &expr)
+  {
+    return expr.visit([](auto &&a) { return to_string(a); });
+  }
+
+  const string &type_name(const expression &)
+  {
+    const static string name = "expression";
+    return name;
+  }
+
+  string to_string(expression::null)
+  {
+    return "null";
+  }
+
+  const string &type_name(expression::null)
+  {
+    const static string name = "null";
+    return name;
+  }
+
+  const string &type_name(const eval_expr &)
+  {
+    const static string name = "<EVAL EXPRESSION>";
+    return name;
+  }
+
+  const string &type_name(const uneval_expr &)
+  {
+    const static string name = "<UNEVAL EXPRESSION>";
+    return name;
+  }
+}
+
+bool operator>>(const lisk::expression &arg, lisk::expression &out)
+{
+  out = arg;
+  return true;
+}
+
+bool operator>>(const lisk::expression &arg, lisk::uneval_expr &out)
+{
+  out = {arg};
+  return true;
+}
+
+bool operator>>(const lisk::expression &arg, lisk::shared_list &out)
+{
+  if (!arg.is_list()) return false;
+
+  out = arg.as_list();
+  return true;
+}
+
+bool operator>>(const lisk::expression &arg, lisk::uneval_shared_list &out)
+{
+  if (!arg.is_list()) return false;
+
+  out = {arg.as_list()};
+  return true;
 }

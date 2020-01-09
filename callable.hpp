@@ -80,6 +80,9 @@ namespace lisk
   };
 
   string to_string(const callable &c);
+  const string &type_name(const callable &);
 }
+
+bool operator>>(const lisk::expression &arg, lisk::callable &out);
 
 #endif

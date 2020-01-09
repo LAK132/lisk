@@ -33,14 +33,17 @@ namespace lisk
   : captured_env(environment::extends(e))
   {
     if (shared_list arg1, arg2;
-        get_arg_as(l.value(), arg1) && get_arg_as(l.next().value(), arg2))
+        l.value() >> arg1 &&
+        l.next().value() >> arg2)
     {
       params = arg1.clone();
+
+      list_reader reader(params, e, allow_tail_eval);
 
       size_t param_index = 0;
       for (auto &node : params)
       {
-        if (symbol s; get_or_eval_arg_as(node.value, e, allow_tail_eval, s))
+        if (symbol s; reader >> s)
         {
           node.value = s;
           ++param_index;
@@ -64,30 +67,33 @@ namespace lisk
   {
     auto new_env = environment::extends(captured_env);
 
-    size_t param_index = 0;
-    for (const auto &node : params)
-    {
-      if (!l)
-      {
-        ERROR("Too few parameters in '" << to_string(l) << "' to call lambda, "
-              "expected parameters are '" << to_string(params) << "'");
-        return expression::null{};
-      }
+    list_reader reader(params, e, allow_tail_eval);
 
-      if (symbol s; get_or_eval_arg_as(node.value, e, allow_tail_eval, s))
+    size_t param_index = 0;
+    for (const auto &node : l)
+    {
+      auto evaled = reader.list;
+      if (symbol s; reader >> s)
       {
-        new_env.define_expr(s, eval(l.value(), e, allow_tail_eval));
+        new_env.define_expr(s, eval(node.value, e, allow_tail_eval));
+        ++param_index;
       }
       else
       {
         ERROR("Failed to get symbol " << std::dec << param_index << " "
-              "from '" << to_string(node.value) << "'");
+              "from '" << to_string(node.value) << "' "
+              "for '" << to_string(evaled) << "'");
         ERROR("Failed to evaluate '" << to_string(*this) << "'");
         return expression::null{};
       }
+    }
 
-      ++param_index;
-      ++l;
+    if (reader)
+    {
+      ERROR("Too few parameters in '" << to_string(l) <<
+            "' to call lambda, expected parameters are '" <<
+            to_string(params) << "'");
+      return expression::null{};
     }
 
     return eval(exp, new_env, allow_tail_eval);
@@ -97,4 +103,18 @@ namespace lisk
   {
     return "(lambda " + to_string(l.params) + " " + to_string(l.exp) + ")";
   }
+
+  const string &type_name(const lambda &)
+  {
+    const static string name = "lambda";
+    return name;
+  }
+}
+
+bool operator>>(const lisk::expression &arg, lisk::lambda &out)
+{
+  if (!arg.is_callable() || !arg.as_callable().is_lambda()) return false;
+
+  out = arg.as_callable().as_lambda();
+  return true;
 }

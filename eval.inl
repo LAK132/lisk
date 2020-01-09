@@ -31,44 +31,42 @@ namespace lisk
   template<typename...>
   struct _false : std::bool_constant<false> {};
 
-  template<typename T, typename U>
-  string type_name()
+  template<typename T>
+  bool list_reader::operator>>(T &out)
   {
-    if constexpr (std::is_same_v<U, expression>)
-      return "expression";
-    else if constexpr (std::is_same_v<U, uneval_expr>)
-      return "<UNEVAL EXPRESSION>";
-    else if constexpr (std::is_same_v<U, expression::null>)
-      return "<NULL>";
-    else if constexpr (std::is_same_v<U, shared_list>)
-      return "list";
-    else if constexpr (std::is_same_v<U, eval_shared_list>)
-      return "<EVAL LIST>";
-    else if constexpr (std::is_same_v<U, uneval_shared_list>)
-      return "<UNEVAL LIST>";
-    else if constexpr (std::is_same_v<U, callable>)
-      return "callable";
-    else if constexpr (std::is_same_v<U, functor>)
-      return "functor";
-    else if constexpr (std::is_same_v<U, lambda>)
-      return "lambda";
-    else if constexpr (std::is_same_v<U, atom>)
-      return "atom";
-    else if constexpr (std::is_same_v<U, atom::nil>)
-      return "nil";
-    else if constexpr (std::is_same_v<U, symbol>)
-      return "symbol";
-    else if constexpr (std::is_same_v<U, string>)
-      return "string";
-    else if constexpr (std::is_same_v<U, number>)
-      return "number";
-    else if constexpr (std::is_same_v<U, uint_t>)
-      return "uint";
-    else if constexpr (std::is_same_v<U, sint_t>)
-      return "sint";
-    else if constexpr (std::is_same_v<U, real_t>)
-      return "real";
-    else static_assert(_false<T>{}, "Invalid type");
+    static_assert(list_reader_traits<T>::allow_get ||
+                  list_reader_traits<T>::allow_eval,
+                  "Type must be get-able or eval-able");
+
+    if (!list) return false;
+
+    if constexpr (list_reader_traits<T>::allow_get &&
+                  list_reader_traits<T>::allow_eval)
+    {
+      if (list.value() >> out ||
+          eval(list.value(), env, allow_tail_eval) >> out)
+      {
+        ++list;
+        return true;
+      }
+    }
+    else if constexpr (list_reader_traits<T>::allow_get)
+    {
+      if (list.value() >> out)
+      {
+        ++list;
+        return true;
+      }
+    }
+    else if constexpr (list_reader_traits<T>::allow_eval)
+    {
+      if (eval(list.value(), env, allow_tail_eval) >> out)
+      {
+        ++list;
+        return true;
+      }
+    }
+    return false;
   }
 
   template<typename ...TYPES, size_t ...I>
@@ -77,17 +75,19 @@ namespace lisk
                            std::index_sequence<I...>)
   {
     std::tuple<std::remove_cv_t<TYPES>...> result;
+
+    list_reader reader(in_list, e, allow_tail);
+
     [[maybe_unused]] auto _get_or_eval = [&](auto &&element, auto i) -> bool
     {
-      if (!get_or_eval_arg_as(in_list.value(), e, allow_tail, element))
+      if (!(reader >> element))
       {
         ERROR("Failed to evaluate element " << i << " "
-              "'" << to_string(in_list.value()) << "' "
-              "of '" << to_string(in_list) << "', "
-              "expected type '" << type_name<decltype(element)>() << "'");
+              "'" << to_string(reader.list.value()) << "' "
+              "of '" << to_string(reader.list) << "', "
+              "expected type '" << type_name(element) << "'");
         return false;
       }
-      ++in_list;
       return true;
     };
     if ((_get_or_eval(std::get<I>(result), I) && ...))
@@ -103,7 +103,7 @@ namespace lisk
                           std::tuple<TYPES...> &out_arg)
   {
     return _get_or_eval_arg_as(in_list, e, allow_tail, out_arg,
-                               std::make_index_sequence<sizeof...(TYPES)>{});
+                               std::index_sequence_for<TYPES...>{});
   }
 
   template<typename ...ARGS>
@@ -112,7 +112,7 @@ namespace lisk
   {
     std::tuple<ARGS...> args;
     if (!get_or_eval_arg_as(l, e, allow_tail, args))
-      return expression{atom{atom::nil{}}};
+      return expression::null{};
     else
       return std::apply((expression (*)(environment &, bool, ARGS...))func,
                         std::tuple_cat(std::forward_as_tuple(e, allow_tail),

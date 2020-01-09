@@ -50,6 +50,9 @@ namespace lisk
   };
 
   string to_string(const lambda &l);
+  const string &type_name(const lambda &);
 }
+
+bool operator>>(const lisk::expression &arg, lisk::lambda &out);
 
 #endif
