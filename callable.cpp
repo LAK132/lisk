@@ -128,11 +128,17 @@ namespace lisk
                                   environment &e,
                                   bool allow_tail_eval) const
   {
-    if (is_null())
-      return expression::null{};
-    else
-      return std::visit(
-        [&](auto &&func) { return func(l, e, allow_tail_eval); }, *_value);
+    // lak::scoped_indenter indent(
+    //   allow_tail_eval ? "callable" : "no-tail callable");
+    if (is_null()) return expression::null{};
+
+    auto result = std::visit(
+      [&](auto &&func) { return func(l, e, allow_tail_eval); }, *_value);
+
+    if (allow_tail_eval && result.is_eval_list())
+      result = eval(result, e, allow_tail_eval);
+
+    return result;
   }
 
   string to_string(const callable &c)

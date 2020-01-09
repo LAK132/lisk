@@ -43,16 +43,10 @@ namespace lisk
                                  environment &e,
                                  bool allow_tail_eval) const
   {
-    // lak::scoped_indenter indent("functor");
     if (std::holds_alternative<basic_functor>(_value))
     {
       if (auto &basic = std::get<basic_functor>(_value); basic.function)
-      {
-        auto result = basic.function(l, e, allow_tail_eval);
-        if (allow_tail_eval && result.is_eval_list())
-          result = eval(result, e, allow_tail_eval);
-        return result;
-      }
+        return basic.function(l, e, allow_tail_eval);
       else
         return expression::null{};
     }
@@ -60,12 +54,7 @@ namespace lisk
     {
       if (auto &wrapped = std::get<wrapped_functor>(_value);
           wrapped.wrapper && wrapped.function)
-      {
-        auto result = wrapped.wrapper(wrapped.function, l, e, allow_tail_eval);
-        if (allow_tail_eval && result.is_eval_list())
-          result = eval(result, e, allow_tail_eval);
-        return result;
-      }
+        return wrapped.wrapper(wrapped.function, l, e, allow_tail_eval);
       else
         return expression::null{};
     }

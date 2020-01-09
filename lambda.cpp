@@ -62,7 +62,6 @@ namespace lisk
                                 environment &e,
                                 bool allow_tail_eval) const
   {
-    // lak::scoped_indenter indent("lambda");
     auto new_env = environment::extends(captured_env);
 
     size_t param_index = 0;
@@ -91,12 +90,7 @@ namespace lisk
       ++l;
     }
 
-    auto result = eval(exp, new_env, allow_tail_eval);
-
-    if (allow_tail_eval && result.is_eval_list())
-      result = eval(result, new_env, allow_tail_eval);
-
-    return result;
+    return eval(exp, new_env, allow_tail_eval);
   }
 
   string to_string(const lambda &l)

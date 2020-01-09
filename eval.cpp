@@ -51,9 +51,11 @@ namespace lisk
       auto result = exp;
       while (allow_tail_eval && result.is_eval_list() &&
              result.as_eval_list().list.value().is_callable())
+      {
         result = eval(
           result.as_eval_list().list.value().as_callable()({}, e, false),
           e, false);
+      }
       return result;
     }
     else if (symbol sym; get_arg_as(exp, sym))
