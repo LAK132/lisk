@@ -241,7 +241,7 @@ namespace lisk
 
   const string &type_name(bool)
   {
-    const static string name = "nool";
+    const static string name = "bool";
     return name;
   }
 
