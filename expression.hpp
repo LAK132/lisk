@@ -139,4 +139,14 @@ bool operator>>(const lisk::expression &arg, lisk::uneval_expr &out);
 bool operator>>(const lisk::expression &arg, lisk::shared_list &out);
 bool operator>>(const lisk::expression &arg, lisk::uneval_shared_list &out);
 
+// These are here instead of in pointer.hpp because of include ordering issues.
+template<typename T>
+bool operator>>(const lisk::expression &arg, T *&out);
+template<typename T>
+bool operator>>(const lisk::expression &arg, const T *&out);
+template<typename T>
+bool operator>>(const lisk::expression &arg, std::shared_ptr<T> &out);
+
+#include "expression.inl"
+
 #endif

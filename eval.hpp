@@ -28,6 +28,7 @@ SOFTWARE.
 #include "environment.hpp"
 #include "expression.hpp"
 #include "shared_list.hpp"
+#include "pointer.hpp"
 #include "string.hpp"
 
 #include <tuple>
@@ -41,82 +42,57 @@ namespace lisk
   expression eval(const expression &exp, environment &e, bool allow_tail_eval);
 
   template<typename T>
-  struct list_reader_traits;
-
-  template<bool GET, bool EVAL>
-  struct basic_list_reader_traits
+  struct list_reader_traits
   {
-    static constexpr bool allow_get = GET;
-    static constexpr bool allow_eval = EVAL;
+    // Default to allowing both get-ing and eval-ing, this results in less work
+    // to get user defined types working with lisk. If the user wants to modify
+    // this behaviour, they can still override these values (see
+    // specialisations below)
+    static constexpr bool allow_get = true;
+    static constexpr bool allow_eval = true;
   };
 
   template<>
-  struct list_reader_traits<atom::nil>
-  : public basic_list_reader_traits<true, true> {};
-
-  template<>
-  struct list_reader_traits<atom>
-  : public basic_list_reader_traits<true, true> {};
-
-  template<>
-  struct list_reader_traits<callable>
-  : public basic_list_reader_traits<true, true> {};
-
-  template<>
-  struct list_reader_traits<functor>
-  : public basic_list_reader_traits<true, true> {};
-
-  template<>
-  struct list_reader_traits<lambda>
-  : public basic_list_reader_traits<true, true> {};
-
-  template<>
   struct list_reader_traits<shared_list>
-  : public basic_list_reader_traits<false, true> {};
+  {
+    static constexpr bool allow_get = false;
+    static constexpr bool allow_eval = true;
+  };
 
   template<>
   struct list_reader_traits<eval_shared_list>
-  : public basic_list_reader_traits<false, true> {};
-
-  template<>
-  struct list_reader_traits<uneval_shared_list>
-  : public basic_list_reader_traits<true, false> {};
+  {
+    static constexpr bool allow_get = false;
+    static constexpr bool allow_eval = true;
+  };
 
   template<>
   struct list_reader_traits<expression>
-  : public basic_list_reader_traits<false, true> {};
+  {
+    static constexpr bool allow_get = false;
+    static constexpr bool allow_eval = true;
+  };
 
   template<>
   struct list_reader_traits<eval_expr>
-  : public basic_list_reader_traits<false, true> {};
+  {
+    static constexpr bool allow_get = false;
+    static constexpr bool allow_eval = true;
+  };
+
+  template<>
+  struct list_reader_traits<uneval_shared_list>
+  {
+    static constexpr bool allow_get = true;
+    static constexpr bool allow_eval = false;
+  };
 
   template<>
   struct list_reader_traits<uneval_expr>
-  : public basic_list_reader_traits<true, false> {};
-
-  template<>
-  struct list_reader_traits<symbol>
-  : public basic_list_reader_traits<true, true> {};
-
-  template<>
-  struct list_reader_traits<number>
-  : public basic_list_reader_traits<true, true> {};
-
-  template<>
-  struct list_reader_traits<uint_t>
-  : public basic_list_reader_traits<true, true> {};
-
-  template<>
-  struct list_reader_traits<sint_t>
-  : public basic_list_reader_traits<true, true> {};
-
-  template<>
-  struct list_reader_traits<real_t>
-  : public basic_list_reader_traits<true, true> {};
-
-  template<>
-  struct list_reader_traits<string>
-  : public basic_list_reader_traits<true, true> {};
+  {
+    static constexpr bool allow_get = true;
+    static constexpr bool allow_eval = false;
+  };
 
   struct list_reader
   {

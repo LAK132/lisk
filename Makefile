@@ -24,7 +24,7 @@ $(OBJDIR)/$(2).o: $(1)/$(2) $(3) Makefile | $(OBJDIR)
 COMPILED += $(OBJDIR)/$(2).o
 endef
 
-HEADERS = atom.hpp callable.hpp environment.hpp eval.hpp eval.inl expression.hpp functor.hpp lambda.hpp lisk.hpp number.hpp shared_list.hpp shared_list.inl string.hpp
+HEADERS = atom.hpp callable.hpp environment.hpp eval.hpp eval.inl expression.hpp functor.hpp lambda.hpp lisk.hpp number.hpp pointer.hpp pointer.inl shared_list.hpp shared_list.inl string.hpp
 
 $(eval $(call COMPILE_TEMPLATE,.,atom.cpp,$(HEADERS)))
 $(eval $(call COMPILE_TEMPLATE,.,callable.cpp,$(HEADERS)))
@@ -35,6 +35,7 @@ $(eval $(call COMPILE_TEMPLATE,.,functor.cpp,$(HEADERS)))
 $(eval $(call COMPILE_TEMPLATE,.,lambda.cpp,$(HEADERS)))
 $(eval $(call COMPILE_TEMPLATE,.,lisk.cpp,$(HEADERS)))
 $(eval $(call COMPILE_TEMPLATE,.,number.cpp,$(HEADERS)))
+$(eval $(call COMPILE_TEMPLATE,.,pointer.cpp,$(HEADERS)))
 $(eval $(call COMPILE_TEMPLATE,.,string.cpp,$(HEADERS)))
 $(eval $(call COMPILE_TEMPLATE,include,debug.cpp,include/debug.hpp))
 $(eval $(call COMPILE_TEMPLATE,include/strconv,strconv.cpp,include/strconv/strconv.hpp))

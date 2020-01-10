@@ -47,6 +47,11 @@ namespace lisk
     _value.emplace<number>(num);
   }
 
+  atom::atom(const pointer &ptr)
+  {
+    _value.emplace<pointer>(ptr);
+  }
+
   atom &atom::operator=(atom::nil)
   {
     _value.emplace<nil>();
@@ -71,6 +76,12 @@ namespace lisk
     return *this;
   }
 
+  atom &atom::operator=(const pointer &ptr)
+  {
+    _value.emplace<pointer>(ptr);
+    return *this;
+  }
+
   bool atom::is_nil() const
   {
     return std::holds_alternative<nil>(_value);
@@ -91,52 +102,49 @@ namespace lisk
     return std::holds_alternative<number>(_value);
   }
 
+  bool atom::is_pointer() const
+  {
+    return std::holds_alternative<pointer>(_value);
+  }
+
   const symbol *atom::get_symbol() const
   {
-    if (is_symbol())
-      return &std::get<symbol>(_value);
-    else
-      return nullptr;
+    return is_symbol() ? &std::get<symbol>(_value) : nullptr;
   }
 
   symbol *atom::get_symbol()
   {
-    if (is_symbol())
-      return &std::get<symbol>(_value);
-    else
-      return nullptr;
+    return is_symbol() ? &std::get<symbol>(_value) : nullptr;
   }
 
   const string *atom::get_string() const
   {
-    if (is_string())
-      return &std::get<string>(_value);
-    else
-      return nullptr;
+    return is_string() ? &std::get<string>(_value) : nullptr;
   }
 
   string *atom::get_string()
   {
-    if (is_string())
-      return &std::get<string>(_value);
-    else
-      return nullptr;
+    return is_string() ? &std::get<string>(_value) : nullptr;
   }
 
   const number *atom::get_number() const
   {
-    if (is_number())
-      return &std::get<number>(_value);
-    else
-      return nullptr;
+    return is_number() ? &std::get<number>(_value) : nullptr;
   }
 
   number *atom::get_number()
   {
-    if (is_number())
-      return &std::get<number>(_value);
-    else
-      return nullptr;
+    return is_number() ? &std::get<number>(_value) : nullptr;
+  }
+
+  const pointer *atom::get_pointer() const
+  {
+    return is_pointer() ? &std::get<pointer>(_value) : nullptr;
+  }
+
+  pointer *atom::get_pointer()
+  {
+    return is_pointer() ? &std::get<pointer>(_value) : nullptr;
   }
 
   const symbol &atom::as_symbol() const
@@ -167,6 +175,16 @@ namespace lisk
   number &atom::as_number()
   {
     return std::get<number>(_value);
+  }
+
+  const pointer &atom::as_pointer() const
+  {
+    return std::get<pointer>(_value);
+  }
+
+  pointer &atom::as_pointer()
+  {
+    return std::get<pointer>(_value);
   }
 
   string to_string(atom::nil)

@@ -26,6 +26,8 @@ SOFTWARE.
 #include "debug.hpp"
 
 #include <iostream>
+#include <typeinfo>
+#include <typeindex>
 
 // Create a new type.
 struct my_type
@@ -46,19 +48,29 @@ const lisk::string &type_name(const my_type &)
   return name;
 }
 
-// Mark our new type as being immediately-get-able and eval-able.
-template<>
-struct lisk::list_reader_traits<my_type>
-: public lisk::basic_list_reader_traits<true, true> {};
-
-// We can now use this new type in as a function parameter!
-lisk::expression my_function(lisk::environment &e, bool, my_type my)
+// We can now use this new type as a function parameter!
+lisk::expression function_taking_my_type(lisk::environment &e,
+                                         bool allow_tail,
+                                         my_type my)
 {
   std::cout << "My type value: " << my.value << "\n";
-  return lisk::expression{lisk::atom::nil{}};
+
+  return lisk::atom::nil{};
 }
 
+lisk::expression print_my_type_value(lisk::environment &e,
+                                     bool allow_tail,
+                                     std::shared_ptr<my_type> my)
+{
+  return my
+    ? function_taking_my_type(e, allow_tail, *my)
+    : lisk::expression::null{};
+}
 
+lisk::expression create_my_type_ptr(lisk::environment &e, bool)
+{
+  return lisk::atom(std::make_shared<my_type>(my_type{10U}));
+}
 
 bool running = true;
 
@@ -75,11 +87,15 @@ int main(int argc, char **argv)
   lisk::environment default_env = lisk::builtin::default_env();
   default_env.define_functor("exit", exit);
 
-  // Add the function using our new type to the lisk environment.
-  default_env.define_functor("my_func", my_function);
+  // Add the functions using our new type to the lisk environment.
+  default_env.define_functor("print_my_type", &print_my_type_value);
+  default_env.define_functor("create_my_type", &create_my_type_ptr);
 
   // Should print "My type value: 10".
-  lisk::eval_string("(my_func 10)", default_env);
+  lisk::eval_string("(print_my_type (create_my_type))", default_env);
+
+  // Should cause a type error.
+  lisk::eval_string("(print_my_type 1337)", default_env);
 
   // Should print "2048"
   lisk::eval_string(
