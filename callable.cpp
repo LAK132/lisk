@@ -28,8 +28,6 @@ SOFTWARE.
 #include "functor.hpp"
 #include "expression.hpp"
 
-#include "strconv/tostring.hpp"
-
 namespace lisk
 {
   callable::callable(const lambda &l)
@@ -129,8 +127,6 @@ namespace lisk
                                   environment &e,
                                   bool allow_tail_eval) const
   {
-    // lak::scoped_indenter indent(
-    //   allow_tail_eval ? "callable" : "no-tail callable");
     if (is_null()) return expression::null{};
 
     auto result = std::visit(

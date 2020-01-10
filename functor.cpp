@@ -24,8 +24,6 @@ SOFTWARE.
 
 #include "functor.hpp"
 
-#include "strconv/tostring.hpp"
-
 namespace lisk
 {
   functor::functor(basic_functor::function_type f)
@@ -67,14 +65,14 @@ namespace lisk
     {
       auto &basic = std::get<functor::basic_functor>(f._value);
       return "<builtin " +
-        lak::to_string((uintptr_t)basic.function) + ">";
+        std::to_string((uintptr_t)basic.function) + ">";
     }
     else if (std::holds_alternative<functor::wrapped_functor>(f._value))
     {
       auto &wrapped = std::get<functor::wrapped_functor>(f._value);
       return "<builtin " +
-        lak::to_string((uintptr_t)wrapped.wrapper) + " " +
-        lak::to_string((uintptr_t)wrapped.function) + ">";
+        std::to_string((uintptr_t)wrapped.wrapper) + " " +
+        std::to_string((uintptr_t)wrapped.function) + ">";
     }
     else return to_string(expression::null{});
   }

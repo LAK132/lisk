@@ -23,7 +23,6 @@ SOFTWARE.
 */
 
 #include "../lisk.hpp"
-#include "debug.hpp"
 
 #include <iostream>
 #include <typeinfo>
@@ -95,7 +94,8 @@ int main(int argc, char **argv)
   lisk::eval_string("(print_my_type (create_my_type))", default_env);
 
   // Should cause a type error.
-  lisk::eval_string("(print_my_type 1337)", default_env);
+  std::cout << lisk::to_string(
+    lisk::eval_string("(print_my_type 1337)", default_env)) << "\n";
 
   // Should print "2048"
   lisk::eval_string(

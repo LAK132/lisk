@@ -26,8 +26,6 @@ SOFTWARE.
 
 #include "expression.hpp"
 
-#include "strconv/tostring.hpp"
-
 #include <variant>
 
 namespace lisk
@@ -180,7 +178,7 @@ namespace lisk
 
   string to_string(uint_t num)
   {
-    return lak::to_string(num);
+    return std::to_string(num);
   }
 
   const string &type_name(uint_t)
@@ -191,7 +189,7 @@ namespace lisk
 
   string to_string(sint_t num)
   {
-    return (num >= 0 ? "+" : "") + lak::to_string(num);
+    return (num >= 0 ? "+" : "") + std::to_string(num);
   }
 
   const string &type_name(sint_t)
@@ -202,7 +200,7 @@ namespace lisk
 
   string to_string(real_t num)
   {
-    return (num >= 0.0 ? "+" : "") + lak::to_string(num);
+    return (num >= 0.0 ? "+" : "") + std::to_string(num);
   }
 
   const string &type_name(real_t)

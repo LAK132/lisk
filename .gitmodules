@@ -1,3 +1,0 @@
-[submodule "include/strconv"]
-	path = include/strconv
-	url = https://github.com/LAK132/strconv

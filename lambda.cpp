@@ -24,9 +24,6 @@ SOFTWARE.
 
 #include "lambda.hpp"
 
-#include "debug.hpp"
-#include "strconv/tostring.hpp"
-
 namespace lisk
 {
   lambda::lambda(shared_list l, environment &e, bool allow_tail_eval)
@@ -50,8 +47,8 @@ namespace lisk
         }
         else
         {
-          ERROR("Failed to get symbol " << std::dec << param_index <<
-                " from '" << to_string(arg1) << "'");
+          // :TODO: This really should throw an exception. Maybe this should
+          // now evaluate to a lambda that returns an exception on call?
           params.clear();
           return;
         }
@@ -80,20 +77,21 @@ namespace lisk
       }
       else
       {
-        ERROR("Failed to get symbol " << std::dec << param_index << " "
-              "from '" << to_string(node.value) << "' "
-              "for '" << to_string(evaled) << "'");
-        ERROR("Failed to evaluate '" << to_string(*this) << "'");
-        return expression::null{};
+        return exception{
+          "Failed to get symbol " + std::to_string(param_index) + " "
+          "from '" + to_string(node.value) + "' "
+          "for '" + to_string(evaled) + "'"
+        };
       }
     }
 
     if (reader)
     {
-      ERROR("Too few parameters in '" << to_string(l) <<
-            "' to call lambda, expected parameters are '" <<
-            to_string(params) << "'");
-      return expression::null{};
+      return exception{
+        "Too few parameters in '" + to_string(l) +
+        "' to call lambda, expected parameters are '" +
+        to_string(params) + "'"
+      };
     }
 
     return eval(exp, new_env, allow_tail_eval);

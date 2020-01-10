@@ -39,7 +39,7 @@ namespace lisk
   {
     struct nil {};
 
-    std::variant<nil, symbol, string, number, pointer> _value;
+    std::variant<nil, symbol, string, number, bool, pointer> _value;
 
     atom() = default;
     atom(const atom &a) = default;
@@ -52,18 +52,21 @@ namespace lisk
     atom(const symbol &sym);
     atom(const string &str);
     atom(const number &num);
+    atom(bool b);
     atom(const pointer &ptr);
 
     atom &operator=(nil);
     atom &operator=(const symbol &sym);
     atom &operator=(const string &str);
     atom &operator=(const number &num);
+    atom &operator=(bool b);
     atom &operator=(const pointer &ptr);
 
     bool is_nil() const;
     bool is_symbol() const;
     bool is_string() const;
     bool is_number() const;
+    bool is_bool() const;
     bool is_pointer() const;
 
     const symbol *get_symbol() const;
@@ -78,6 +81,9 @@ namespace lisk
     const pointer *get_pointer() const;
     pointer *get_pointer();
 
+    const bool *get_bool() const;
+    bool *get_bool();
+
     const symbol &as_symbol() const;
     symbol &as_symbol();
 
@@ -86,6 +92,9 @@ namespace lisk
 
     const number &as_number() const;
     number &as_number();
+
+    const bool &as_bool() const;
+    bool &as_bool();
 
     const pointer &as_pointer() const;
     pointer &as_pointer();
@@ -100,11 +109,15 @@ namespace lisk
   string to_string(atom::nil);
   const string &type_name(atom::nil);
 
+  string to_string(bool b);
+  const string &type_name(bool);
+
   string to_string(const atom &a);
   const string &type_name(const atom &);
 }
 
 bool operator>>(const lisk::expression &arg, lisk::atom::nil);
+bool operator>>(const lisk::expression &arg, bool &out);
 bool operator>>(const lisk::expression &arg, lisk::atom &out);
 
 #endif

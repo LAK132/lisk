@@ -37,8 +37,6 @@ $(eval $(call COMPILE_TEMPLATE,.,lisk.cpp,$(HEADERS)))
 $(eval $(call COMPILE_TEMPLATE,.,number.cpp,$(HEADERS)))
 $(eval $(call COMPILE_TEMPLATE,.,pointer.cpp,$(HEADERS)))
 $(eval $(call COMPILE_TEMPLATE,.,string.cpp,$(HEADERS)))
-$(eval $(call COMPILE_TEMPLATE,include,debug.cpp,include/debug.hpp))
-$(eval $(call COMPILE_TEMPLATE,include/strconv,strconv.cpp,include/strconv/strconv.hpp))
 $(eval $(call COMPILE_TEMPLATE,example,main.cpp,$(HEADERS)))
 
 $(BINDIR)/example.elf: $(COMPILED) | $(BINDIR) $(OBJDIR)

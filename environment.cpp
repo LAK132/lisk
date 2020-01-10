@@ -24,8 +24,6 @@ SOFTWARE.
 
 #include "environment.hpp"
 
-#include "debug.hpp"
-
 namespace lisk
 {
   environment environment::extends(const environment &other)
@@ -63,9 +61,11 @@ namespace lisk
     for (const auto &node : _map)
       if (const auto it = node.value.find(sym); it != node.value.end())
         return it->second;
-    ERROR("Environment lookup failed, couldn't find '" << sym << "' in '" <<
-          to_string(*this) << "'");
-    return {expression::null{}};
+
+    return exception{
+      "Environment lookup failed, couldn't find '" + sym + "' in '" +
+      to_string(*this) + "'"
+    };
   }
 
   environment environment::clone(size_t depth) const

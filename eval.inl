@@ -24,8 +24,6 @@ SOFTWARE.
 
 #include "eval.hpp"
 
-#include "debug.hpp"
-
 namespace lisk
 {
   template<typename...>
@@ -71,7 +69,8 @@ namespace lisk
 
   template<typename ...TYPES, size_t ...I>
   bool _get_or_eval_arg_as(shared_list in_list, environment &e,
-                           bool allow_tail, std::tuple<TYPES...> &out_arg,
+                           bool allow_tail, exception &exc,
+                           std::tuple<TYPES...> &out_arg,
                            std::index_sequence<I...>)
   {
     std::tuple<std::remove_cv_t<TYPES>...> result;
@@ -82,10 +81,10 @@ namespace lisk
     {
       if (!(reader >> element))
       {
-        ERROR("Failed to evaluate element " << i << " "
-              "'" << to_string(reader.list.value()) << "' "
-              "of '" << to_string(reader.list) << "', "
-              "expected type '" << type_name(element) << "'");
+        exc.message = "Failed to evaluate element " + std::to_string(i) + " "
+          "'" + to_string(reader.list.value()) + "' "
+          "of '" + to_string(reader.list) + "', "
+          "expected type '" + type_name(element) + "'";
         return false;
       }
       return true;
@@ -100,9 +99,9 @@ namespace lisk
 
   template<typename ...TYPES>
   bool get_or_eval_arg_as(shared_list in_list, environment &e, bool allow_tail,
-                          std::tuple<TYPES...> &out_arg)
+                          exception &exc, std::tuple<TYPES...> &out_arg)
   {
-    return _get_or_eval_arg_as(in_list, e, allow_tail, out_arg,
+    return _get_or_eval_arg_as(in_list, e, allow_tail, exc, out_arg,
                                std::index_sequence_for<TYPES...>{});
   }
 
@@ -111,8 +110,9 @@ namespace lisk
                               environment &e, bool allow_tail)
   {
     std::tuple<ARGS...> args;
-    if (!get_or_eval_arg_as(l, e, allow_tail, args))
-      return expression::null{};
+    exception exc;
+    if (!get_or_eval_arg_as(l, e, allow_tail, exc, args))
+      return exc;
     else
       return std::apply((expression (*)(environment &, bool, ARGS...))func,
                         std::tuple_cat(std::forward_as_tuple(e, allow_tail),

@@ -35,8 +35,6 @@ SOFTWARE.
 #include "number.hpp"
 #include "shared_list.hpp"
 
-#include "debug.hpp"
-
 #include <vector>
 #include <memory>
 #include <unordered_map>
@@ -65,6 +63,17 @@ namespace lisk
   // Top level eval function.
   expression eval_string(const string &str, environment &env);
 
+  template<typename T>
+  expression type_error(const string &message,
+                        const T &t,
+                        const string &expected)
+  {
+    return exception{
+      message + ": '" + to_string(t) + "' is '" + type_name(t) +
+      "', expected " + expected
+    };
+  }
+
   namespace builtin
   {
     expression list_env(environment &env, bool allow_tail);
@@ -72,7 +81,7 @@ namespace lisk
     expression nil_check(environment &env, bool allow_tail, expression exp);
     expression zero_check(environment &env, bool allow_tail, number num);
     // expr equal_check(shared_list l, environment &env);
-    expression conditional(environment &env, bool allow_tail, expression exp,
+    expression conditional(environment &env, bool allow_tail, bool b,
                            uneval_expr cond, uneval_expr alt);
     expression define(environment &env, bool allow_tail, symbol sym,
                       expression exp);

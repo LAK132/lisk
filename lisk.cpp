@@ -23,8 +23,10 @@ SOFTWARE.
 */
 
 #include "lisk.hpp"
+
 #include "strconv/tostring.hpp"
-#include "debug.hpp"
+
+#include <iostream>
 
 namespace lisk
 {
@@ -139,11 +141,8 @@ namespace lisk
 
     std::smatch match;
 
-    ASSERTF(std::regex_match(token, match, numeric_regex),
-            "Bad number (" << token << ")");
-
-    ASSERTF(match.size() == 9,
-            "Bad number (" << token << ")");
+    if (!std::regex_match(token, match, numeric_regex) || match.size() != 9)
+      return std::numeric_limits<real_t>::signaling_NaN();
 
     if (match[2].matched)
     {
@@ -200,15 +199,13 @@ namespace lisk
           std::stoull(match[8].str(), nullptr, 2));
       }
     }
-    else FATAL("Bad number (" << token << ")");
+    else return std::numeric_limits<real_t>::signaling_NaN();
 
     return result;
   }
 
   string parse_string(const string &token)
   {
-    ASSERTF(token.size() >= 2,
-            "string token (" << lak::strconv_ascii(token) << ") too short");
     if (token.size() == 2) return string{};
     return string{token.substr(1, token.size() - 2)};
   }
@@ -220,7 +217,7 @@ namespace lisk
 
     auto push_element = [&]() -> shared_list
     {
-      ASSERTF(!stack.empty(), "Cannot push element onto an empty stack");
+      if (stack.empty()) return {};
       // Get the previous nill element.
       shared_list old_element = stack.back().back();
       // If this element holds null_t then no values have been added to this
@@ -279,8 +276,12 @@ namespace lisk
 
         if (c == '"')
           value = atom{parse_string(token)};
-        else if (token == "nill")
+        else if (token == "nil")
           value = atom{atom::nil{}};
+        else if (token == "true")
+          value = atom{true};
+        else if (token == "false")
+          value = atom{false};
         else if (is_numeric(token))
           value = atom{parse_number(token)};
         else
@@ -330,28 +331,17 @@ namespace lisk
 
     expression null_check(environment &env, bool allow_tail, expression exp)
     {
-      // if (is_nil(eval(l.value(), e)))
-      if (is_nil(exp))
-        return expression{atom{number{uint_t{1U}}}};
-      else
-        return atom::nil{};
+      return atom{is_null(exp)};
     }
 
     expression nil_check(environment &env, bool allow_tail, expression exp)
     {
-      // if (is_nil(eval(l.value(), e)))
-      if (is_nil(exp))
-        return expression{atom{number{uint_t{1U}}}};
-      else
-        return atom::nil{};
+      return atom{is_nil(exp)};
     }
 
     expression zero_check(environment &env, bool allow_tail, number num)
     {
-      if (num.visit([](auto &&n) -> bool { return n == 0; }))
-        return expression{atom{number{uint_t{1U}}}};
-      else
-        return atom::nil{};
+      return atom{num.visit([](auto &&n) -> bool { return n == 0; })};
     }
 
     // expression equal_check(shared_list l, environment &env)
@@ -362,13 +352,12 @@ namespace lisk
     //     return atom::nil{};
     // }
 
-    expression conditional(environment &env, bool allow_tail, expression exp,
+    expression conditional(environment &env, bool allow_tail, bool b,
                            uneval_expr cond, uneval_expr alt)
     {
-      if (!is_nil(exp))
-        return eval(cond.expr, env, allow_tail);
-      else
-        return eval(alt.expr, env, allow_tail);
+      return b
+        ? eval(cond.expr, env, allow_tail)
+        : eval(alt.expr, env, allow_tail);
     }
 
     expression define(environment &env, bool allow_tail, symbol sym,
@@ -449,13 +438,9 @@ namespace lisk
         }
         return ++result;
       }
-      else
-      {
-        ERROR("Map failed, '" << to_string(subexp) << "' is not a "
-              "function/lambda");
-        return expression::null{};
-      }
-      return atom::nil{};
+      else return subexp.visit([](auto &&a) {
+        return type_error("Map error", a, "a function or lambda");
+      });
     }
 
     expression tail_call(shared_list list, environment &env, bool allow_tail)
@@ -485,8 +470,7 @@ namespace lisk
 
       // Return an eval_shared_list containing a lambda that immediately
       // evaluates our list param.
-      return
-        eval_shared_list{result};
+      return eval_shared_list{result};
     }
 
     expression car(environment &env, bool allow_tail, shared_list l)
@@ -519,9 +503,7 @@ namespace lisk
       }
       else
       {
-        ERROR("join failed, argument '" << to_string(l.value()) << "' "
-              "is not a list");
-        return expression::null{};
+        return type_error("Join error", l.value(), "a list");
       }
 
       for (const auto &node : l.next())
@@ -533,9 +515,7 @@ namespace lisk
         }
         else
         {
-          ERROR("join failed, argument '" << to_string(node.value) << "' "
-                "is not a list");
-          return expression::null{};
+          return type_error("Join error", node.value, "a list");
         }
       }
 
@@ -660,9 +640,7 @@ namespace lisk
       }
       else
       {
-        ERROR("Argument '" << to_string(l.value()) << "' is not a "
-              "number");
-        return expression::null{};
+        return type_error("Add error", l.value(), "a number");
       }
 
       for (const auto &it : l.next())
@@ -673,8 +651,7 @@ namespace lisk
         }
         else
         {
-          ERROR("Argument '" << to_string(it.value) << "' is not a number");
-          return expression::null{};
+          return type_error("Add error", l.value(), "a number");
         }
       }
 
@@ -693,9 +670,7 @@ namespace lisk
       }
       else
       {
-        ERROR("Argument '" << to_string(l.value()) << "' is not a "
-              "number");
-        return expression::null{};
+        return type_error("Sub error", l.value(), "a number");
       }
 
       for (const auto &it : l.next())
@@ -706,8 +681,7 @@ namespace lisk
         }
         else
         {
-          ERROR("Argument '" << to_string(it.value) << "' is not a number");
-          return expression::null{};
+          return type_error("Sub error", l.value(), "a number");
         }
       }
 
@@ -726,9 +700,7 @@ namespace lisk
       }
       else
       {
-        ERROR("Argument '" << to_string(l.value()) << "' is not a "
-              "number");
-        return expression::null{};
+        return type_error("Mul error", l.value(), "a number");
       }
 
       for (const auto &it : l.next())
@@ -739,8 +711,7 @@ namespace lisk
         }
         else
         {
-          ERROR("Argument '" << to_string(it.value) << "' is not a number");
-          return expression::null{};
+          return type_error("Mul error", l.value(), "a number");
         }
       }
 
@@ -759,9 +730,7 @@ namespace lisk
       }
       else
       {
-        ERROR("Argument '" << to_string(l.value()) << "' is not a "
-              "number");
-        return expression::null{};
+        return type_error("Div error", l.value(), "a number");
       }
 
       for (const auto &it : l.next())
@@ -772,8 +741,7 @@ namespace lisk
         }
         else
         {
-          ERROR("Argument '" << to_string(it.value) << "' is not a number");
-          return expression::null{};
+          return type_error("Div error", l.value(), "a number");
         }
       }
 

@@ -27,8 +27,6 @@ SOFTWARE.
 #include "functor.hpp"
 #include "lambda.hpp"
 
-#include "debug.hpp"
-
 namespace lisk
 {
   shared_list eval_all(shared_list l, environment &e, bool allow_tail_eval)
@@ -96,21 +94,29 @@ namespace lisk
       {
         return c(l.next(), e, allow_tail_eval);
       }
+      else if (exception exc; subexp >> exc)
+      {
+        return exc;
+      }
       else
       {
-        ERROR("Failed to eval sub-expression '" << to_string(l.value()) <<
-              "' of '" << to_string(exp) <<
-              "', got '" << to_string(subexp) << "', expected a symbol, "
-              "atom or callable");
-        return expression::null{};
+        return exception{
+          "Failed to eval sub-expression '" + to_string(l.value()) +
+          "' of '" + to_string(exp) + "', got '" + to_string(subexp) +
+          "', expected a symbol, atom or callable"
+        };
       }
+    }
+    else if (exception exc; exp >> exc)
+    {
+      return exc;
     }
     else
     {
-      ERROR("Failed to eval expression '" << to_string(exp) << "' type '"
-            << exp.visit([](auto &&a) { return type_name(a); })
-            << "'");
-      return expression::null{};
+      return exception{
+        "Failed to eval expression '" + to_string(exp) + "' type '" +
+        exp.visit([](auto &&a) { return type_name(a); }) + "'"
+      };
     }
   }
 }

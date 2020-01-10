@@ -58,6 +58,11 @@ namespace lisk
     _value.emplace<callable>(c);
   }
 
+  expression::expression(const exception &exc)
+  {
+    _value.emplace<exception>(exc);
+  }
+
   expression &expression::operator=(null)
   {
     _value.emplace<null>();
@@ -94,6 +99,12 @@ namespace lisk
     return *this;
   }
 
+  expression &expression::operator=(const exception &exc)
+  {
+    _value.emplace<exception>(exc);
+    return *this;
+  }
+
   bool expression::is_null() const
   {
     return std::holds_alternative<null>(_value);
@@ -119,68 +130,59 @@ namespace lisk
     return std::holds_alternative<callable>(_value);
   }
 
+  bool expression::is_exception() const
+  {
+    return std::holds_alternative<exception>(_value);
+  }
+
   const atom *expression::get_atom() const
   {
-    if (is_atom())
-      return &std::get<atom>(_value);
-    else
-      return nullptr;
+    return is_atom() ? &std::get<atom>(_value) : nullptr;
   }
 
   atom *expression::get_atom()
   {
-    if (is_atom())
-      return &std::get<atom>(_value);
-    else
-      return nullptr;
+    return is_atom() ? &std::get<atom>(_value) : nullptr;
   }
 
   const shared_list *expression::get_list() const
   {
-    if (is_list())
-      return &std::get<shared_list>(_value);
-    else
-      return nullptr;
+    return is_list() ? &std::get<shared_list>(_value) : nullptr;
   }
 
   shared_list *expression::get_list()
   {
-    if (is_list())
-      return &std::get<shared_list>(_value);
-    else
-      return nullptr;
+    return is_list() ? &std::get<shared_list>(_value) : nullptr;
   }
 
   const eval_shared_list *expression::get_eval_list() const
   {
-    if (is_eval_list())
-      return &std::get<eval_shared_list>(_value);
-    else
-      return nullptr;
+    return is_eval_list() ? &std::get<eval_shared_list>(_value) : nullptr;
   }
 
   eval_shared_list *expression::get_eval_list()
   {
-    if (is_eval_list())
-      return &std::get<eval_shared_list>(_value);
-    else
-      return nullptr;
+    return is_eval_list() ? &std::get<eval_shared_list>(_value) : nullptr;
   }
 
   const callable *expression::get_callable() const
   {
-    if (is_callable())
-      return &std::get<callable>(_value);
-    else
-      return nullptr;
+    return is_callable() ? &std::get<callable>(_value) : nullptr;
   }
 
   callable *expression::get_callable()
   {
-    if (is_callable())
-      return &std::get<callable>(_value);
-    else
-      return nullptr;
+    return is_callable() ? &std::get<callable>(_value) : nullptr;
+  }
+
+  const exception *expression::get_exception() const
+  {
+    return is_exception() ? &std::get<exception>(_value) : nullptr;
+  }
+
+  exception *expression::get_exception()
+  {
+    return is_exception() ? &std::get<exception>(_value) : nullptr;
   }
 
   const atom &expression::as_atom() const
@@ -223,6 +225,16 @@ namespace lisk
     return std::get<callable>(_value);
   }
 
+  const exception &expression::as_exception() const
+  {
+    return std::get<exception>(_value);
+  }
+
+  exception &expression::as_exception()
+  {
+    return std::get<exception>(_value);
+  }
+
   const string &type_name(const shared_list &)
   {
     const static string name = "list";
@@ -248,6 +260,17 @@ namespace lisk
   const string &type_name(const uneval_shared_list &)
   {
     const static string name = "<UNEVAL LIST>";
+    return name;
+  }
+
+  string to_string(const exception &exc)
+  {
+    return "<EXCEPTION '" + exc.message + "'>";
+  }
+
+  const string &type_name(const exception &)
+  {
+    const static string name = "<EXCEPTION>";
     return name;
   }
 
@@ -289,6 +312,14 @@ namespace lisk
 bool operator>>(const lisk::expression &arg, lisk::expression &out)
 {
   out = arg;
+  return true;
+}
+
+bool operator>>(const lisk::expression &arg, lisk::exception &out)
+{
+  if (!arg.is_exception()) return false;
+
+  out = arg.as_exception();
   return true;
 }
 
