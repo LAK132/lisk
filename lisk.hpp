@@ -54,7 +54,8 @@ namespace lisk
   bool is_nil(const expression &expr);
   bool is_null(const expression &expr);
 
-  std::vector<string> tokenise(const string &str);
+  std::vector<string> tokenise(const string &str,
+                               size_t *chars_used = nullptr);
 
   number parse_number(const string &token);
   string parse_string(const string &token);
@@ -73,6 +74,44 @@ namespace lisk
       "', expected " + expected
     };
   }
+
+  struct reader
+  {
+    struct iterator
+    {
+      struct sentinel {};
+
+      reader &ref;
+
+      bool operator==(sentinel) const;
+
+      bool operator!=(sentinel) const;
+
+      lisk::expression operator*();
+
+      iterator &operator++();
+    };
+
+    reader() = default;
+    reader(const lisk::environment e, bool allow_tail = true);
+
+    lisk::environment env;
+    bool allow_tail_eval;
+
+    lisk::string string_buffer;
+    std::vector<lisk::string> token_buffer;
+    std::deque<std::vector<lisk::string>> tokens;
+
+    void clear();
+
+    operator bool() const;
+
+    iterator begin();
+
+    iterator::sentinel end() const;
+
+    reader &operator+=(const lisk::string &str);
+  };
 
   namespace builtin
   {

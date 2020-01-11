@@ -73,25 +73,34 @@ namespace lisk
     return expr.is_null();
   }
 
-  std::vector<string> tokenise(const string &str)
+  std::vector<string> tokenise(const string &str, size_t *chars_used)
   {
     std::vector<string> result;
-    result.emplace_back();
+    string buffer;
+    size_t chars_read = 0;
+
+    auto begin_next = [&]
+    {
+      if (!buffer.empty()) result.emplace_back(std::move(buffer));
+      buffer.clear();
+      if (chars_used) *chars_used = chars_read;
+    };
 
     bool in_string = false;
     bool is_string_escaping = false;
     char string_char = 0;
     for (const auto c : str)
     {
+      ++chars_read;
       if (in_string)
       {
         if (is_string_escaping)
         {
-          if (c == 'n') result.back() += '\n';
-          else if (c == 'r') result.back() += '\r';
-          else if (c == 't') result.back() += '\t';
-          else if (c == '0') result.back() += '\0';
-          else result.back() += c;
+          if      (c == 'n') buffer += '\n';
+          else if (c == 'r') buffer += '\r';
+          else if (c == 't') buffer += '\t';
+          else if (c == '0') buffer += '\0';
+          else               buffer += c;
           is_string_escaping = false;
         }
         else if (c == '\\')
@@ -100,38 +109,37 @@ namespace lisk
         }
         else
         {
-          result.back() += c;
+          buffer += c;
           if (c == string_char)
           {
             in_string = false;
-            result.emplace_back();
+            begin_next();
           }
         }
       }
       else if (c == '"' || c == '\'')
       {
-        result.back() += c;
+        buffer += c;
         in_string = true;
         is_string_escaping = false;
         string_char = c;
       }
       else if (is_whitespace(c))
       {
-        if (!result.back().empty()) result.emplace_back();
+        if (!buffer.empty()) begin_next();
       }
       else if (is_bracket(c))
       {
-        if (result.back().empty()) result.back() += c;
-        else result.emplace_back(string() + c);
-        result.emplace_back();
+        if (!buffer.empty()) begin_next();
+        buffer += c;
+        begin_next();
       }
       else
       {
-        result.back() += c;
+        buffer += c;
       }
     }
 
-    if (result.back().empty()) result.pop_back();
     return result;
   }
 
@@ -300,6 +308,102 @@ namespace lisk
   expression eval_string(const string &str, environment &env)
   {
     return eval(parse(tokenise(str)), env, true);
+  }
+
+  bool reader::iterator::operator==(sentinel) const
+  {
+    return !ref;
+  }
+
+  bool reader::iterator::operator!=(sentinel) const
+  {
+    return ref;
+  }
+
+  lisk::expression reader::iterator::operator*()
+  {
+    return lisk::eval(lisk::parse(ref.tokens.front()),
+                      ref.env, ref.allow_tail_eval);
+  }
+
+  reader::iterator &reader::iterator::operator++()
+  {
+    ref.tokens.pop_front();
+    return *this;
+  }
+
+  reader::reader(const lisk::environment e, bool allow_tail)
+  : env(e), allow_tail_eval(allow_tail)
+  {}
+
+  void reader::clear()
+  {
+    string_buffer.clear();
+    token_buffer.clear();
+    tokens.clear();
+  }
+
+  reader::operator bool() const
+  {
+    return tokens.size() > 0;
+  }
+
+  reader::iterator reader::begin()
+  {
+    return {*this};
+  }
+
+  reader::iterator::sentinel reader::end() const
+  {
+    return {};
+  }
+
+  reader &reader::operator+=(const lisk::string &str)
+  {
+    string_buffer += str;
+
+    // Tokenise as much of the buffer as we can.
+    size_t chars_used;
+    auto new_tokens = lisk::tokenise(string_buffer, &chars_used);
+    string_buffer.erase(string_buffer.begin(),
+                        string_buffer.begin() + chars_used);
+
+    // Push the new tokens into the reader's token buffer.
+    token_buffer.reserve(token_buffer.size() + new_tokens.size());
+    for (auto &token : new_tokens) token_buffer.emplace_back(std::move(token));
+
+    // Push the groups of tokens into the reader. These should either be
+    // individual atoms or complete lists.
+    size_t scope_count = 0;
+    for (auto it = token_buffer.begin(); it != token_buffer.end(); ++it)
+    {
+      if (*it == "(")
+      {
+        ++scope_count;
+      }
+      else if (*it == ")")
+      {
+        --scope_count;
+      }
+      if (scope_count == 0)
+      {
+        auto begin = token_buffer.begin();
+        auto end = it + 1;
+
+        if (tokens.empty() || !tokens.back().empty()) tokens.emplace_back();
+        tokens.back().reserve(end - begin);
+
+        for (auto it2 = begin; it2 != end; ++it2)
+          tokens.back().emplace_back(std::move(*it2));
+
+        token_buffer.erase(begin, end);
+
+        it = token_buffer.begin();
+        if (it == token_buffer.end()) break;
+      }
+    }
+
+    return *this;
   }
 
   namespace builtin
