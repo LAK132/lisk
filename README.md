@@ -47,7 +47,7 @@ lisk::expression create_my_type(lisk::environment &e,
                                 lisk::number num)
 {
   // We can safely return shared_ptrs to any type we like. They must be stored
-  // in a lisk::atom. Lisk makes use of C++'s RTTI to make sure your don't do
+  // in a lisk::atom. Lisk makes use of C++'s RTTI to make sure you don't do
   // any invalid type conversions.
   return lisk::atom(std::make_shared<my_type>(num));
 }
@@ -90,4 +90,15 @@ that once compliled, the function is technically fixed length.
 lisk::expression my_function(lisk::environment &environment,
                              bool allow_tail_eval,
                              ...);
+
+// e.g.
+lisk::expression my_function(lisk::environment &environment,
+                             bool allow_tail_eval,
+                             lisk::number number,
+                             lisk::atom atom)
+{
+  // ... do something with the number.
+  // ... do something with the atom.
+  return // ... return something
+}
 ```
