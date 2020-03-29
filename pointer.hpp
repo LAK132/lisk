@@ -41,7 +41,7 @@ namespace lisk
     std::variant<void*, const void*, std::shared_ptr<void>> _value;
     std::type_index _type;
 
-    pointer() = default;
+    pointer() : _value((const void*)nullptr), _type(typeid(void)) {}
     pointer(const pointer &ptr) = default;
     pointer(pointer &&ptr) = default;
 
