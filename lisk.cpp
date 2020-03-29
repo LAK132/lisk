@@ -86,11 +86,16 @@ namespace lisk
 
     bool in_string = false;
     bool is_string_escaping = false;
+    bool in_comment = false;
     char string_char = 0;
     for (const auto c : str)
     {
       ++chars_read;
-      if (in_string)
+      if (in_comment)
+      {
+        if (c == '\n') in_comment = false;
+      }
+      else if (in_string)
       {
         if (is_string_escaping)
         {
@@ -114,6 +119,10 @@ namespace lisk
             begin_next();
           }
         }
+      }
+      else if (c == ';')
+      {
+        in_comment = true;
       }
       else if (c == '"' || c == '\'')
       {
