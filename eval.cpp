@@ -44,7 +44,12 @@ namespace lisk
 
   expression eval(const expression &exp, environment &e, bool allow_tail_eval)
   {
-    if (exp.is_eval_list())
+    if (exp.is_null())
+    {
+      // Expr was the empty list, which evaluates to nil.
+      return atom::nil{};
+    }
+    else if (exp.is_eval_list())
     {
       if (!allow_tail_eval) return exp;
 
