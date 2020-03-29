@@ -30,20 +30,11 @@ SOFTWARE.
 
 namespace lisk
 {
-  number::number(uint_t u)
-  {
-    _value.emplace<uint_t>(u);
-  }
+  number::number(uint_t u) { _value.emplace<uint_t>(u); }
 
-  number::number(sint_t s)
-  {
-    _value.emplace<sint_t>(s);
-  }
+  number::number(sint_t s) { _value.emplace<sint_t>(s); }
 
-  number::number(real_t r)
-  {
-    _value.emplace<real_t>(r);
-  }
+  number::number(real_t r) { _value.emplace<real_t>(r); }
 
   number &number::operator=(uint_t u)
   {
@@ -126,35 +117,17 @@ namespace lisk
       return nullptr;
   }
 
-  const uint_t &number::as_uint() const
-  {
-    return std::get<uint_t>(_value);
-  }
+  const uint_t &number::as_uint() const { return std::get<uint_t>(_value); }
 
-  uint_t &number::as_uint()
-  {
-    return std::get<uint_t>(_value);
-  }
+  uint_t &number::as_uint() { return std::get<uint_t>(_value); }
 
-  const sint_t &number::as_sint() const
-  {
-    return std::get<sint_t>(_value);
-  }
+  const sint_t &number::as_sint() const { return std::get<sint_t>(_value); }
 
-  sint_t &number::as_sint()
-  {
-    return std::get<sint_t>(_value);
-  }
+  sint_t &number::as_sint() { return std::get<sint_t>(_value); }
 
-  const real_t &number::as_real() const
-  {
-    return std::get<real_t>(_value);
-  }
+  const real_t &number::as_real() const { return std::get<real_t>(_value); }
 
-  real_t &number::as_real()
-  {
-    return std::get<real_t>(_value);
-  }
+  real_t &number::as_real() { return std::get<real_t>(_value); }
 
   string to_string(const number &num)
   {
@@ -176,10 +149,7 @@ namespace lisk
     return name;
   }
 
-  string to_string(uint_t num)
-  {
-    return std::to_string(num);
-  }
+  string to_string(uint_t num) { return std::to_string(num); }
 
   const string &type_name(uint_t)
   {
@@ -221,7 +191,8 @@ bool operator>>(const lisk::expression &arg, lisk::number &out)
 bool operator>>(const lisk::expression &arg, lisk::uint_t &out)
 {
   if (!arg.is_atom() || !arg.as_atom().is_number() ||
-      !arg.as_atom().as_number().is_uint()) return false;
+      !arg.as_atom().as_number().is_uint())
+    return false;
 
   out = arg.as_atom().as_number().as_uint();
   return true;
@@ -230,7 +201,8 @@ bool operator>>(const lisk::expression &arg, lisk::uint_t &out)
 bool operator>>(const lisk::expression &arg, lisk::sint_t &out)
 {
   if (!arg.is_atom() || !arg.as_atom().is_number() ||
-      !arg.as_atom().as_number().is_sint()) return false;
+      !arg.as_atom().as_number().is_sint())
+    return false;
 
   out = arg.as_atom().as_number().as_sint();
   return true;
@@ -239,7 +211,8 @@ bool operator>>(const lisk::expression &arg, lisk::sint_t &out)
 bool operator>>(const lisk::expression &arg, lisk::real_t &out)
 {
   if (!arg.is_atom() || !arg.as_atom().is_number() ||
-      !arg.as_atom().as_number().is_real()) return false;
+      !arg.as_atom().as_number().is_real())
+    return false;
 
   out = arg.as_atom().as_number().as_real();
   return true;
@@ -248,25 +221,29 @@ bool operator>>(const lisk::expression &arg, lisk::real_t &out)
 lisk::number operator+(lisk::number A, lisk::number B)
 {
   return std::visit([](auto &&A, auto &&B) { return lisk::number(A + B); },
-                    A._value, B._value);
+                    A._value,
+                    B._value);
 }
 
 lisk::number operator-(lisk::number A, lisk::number B)
 {
   return std::visit([](auto &&A, auto &&B) { return lisk::number(A - B); },
-                    A._value, B._value);
+                    A._value,
+                    B._value);
 }
 
 lisk::number operator*(lisk::number A, lisk::number B)
 {
   return std::visit([](auto &&A, auto &&B) { return lisk::number(A * B); },
-                    A._value, B._value);
+                    A._value,
+                    B._value);
 }
 
 lisk::number operator/(lisk::number A, lisk::number B)
 {
   return std::visit([](auto &&A, auto &&B) { return lisk::number(A / B); },
-                    A._value, B._value);
+                    A._value,
+                    B._value);
 }
 
 lisk::number &operator+=(lisk::number &A, lisk::number B)

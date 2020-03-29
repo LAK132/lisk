@@ -27,8 +27,8 @@ SOFTWARE.
 
 #include "atom.hpp"
 #include "callable.hpp"
-#include "string.hpp"
 #include "shared_list.hpp"
+#include "string.hpp"
 
 #include <variant>
 
@@ -38,21 +38,33 @@ namespace lisk
 
   using shared_list = basic_shared_list<expression>;
 
-  struct eval_shared_list { shared_list list; };
-  struct uneval_shared_list { shared_list list; };
+  struct eval_shared_list
+  {
+    shared_list list;
+  };
+  struct uneval_shared_list
+  {
+    shared_list list;
+  };
 
-  struct exception { string message; };
+  struct exception
+  {
+    string message;
+  };
 
   struct expression
   {
-    struct null {};
+    struct null
+    {
+    };
 
-    std::variant<null, atom, eval_shared_list,
-                 shared_list, callable, exception> _value;
+    std::
+      variant<null, atom, eval_shared_list, shared_list, callable, exception>
+        _value;
 
-    expression() = default;
+    expression()                       = default;
     expression(const expression &expr) = default;
-    expression(expression &&expr) = default;
+    expression(expression &&expr)      = default;
 
     expression &operator=(const expression &expr) = default;
     expression &operator=(expression &&expr) = default;
@@ -114,14 +126,26 @@ namespace lisk
     exception &as_exception();
 
     template<typename LAMBDA>
-    auto visit(LAMBDA &&lambda) const { return std::visit(lambda, _value); }
+    auto visit(LAMBDA &&lambda) const
+    {
+      return std::visit(lambda, _value);
+    }
 
     template<typename LAMBDA>
-    auto visit(LAMBDA &&lambda) { return std::visit(lambda, _value); }
+    auto visit(LAMBDA &&lambda)
+    {
+      return std::visit(lambda, _value);
+    }
   };
 
-  struct eval_expr { expression expr; };
-  struct uneval_expr { expression expr; };
+  struct eval_expr
+  {
+    expression expr;
+  };
+  struct uneval_expr
+  {
+    expression expr;
+  };
 
   const string &type_name(const shared_list &);
 

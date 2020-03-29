@@ -45,17 +45,19 @@ namespace lisk
     struct wrapped_functor
     {
       using function_type = void (*)();
-      using wrapper_type = expression (*)(function_type, shared_list,
-                                          environment &, bool);
+      using wrapper_type  = expression (*)(function_type,
+                                          shared_list,
+                                          environment &,
+                                          bool);
       wrapper_type wrapper;
       function_type function;
     };
 
     std::variant<std::monostate, basic_functor, wrapped_functor> _value;
 
-    functor() = default;
+    functor()                = default;
     functor(const functor &) = default;
-    functor(functor &&) = default;
+    functor(functor &&)      = default;
 
     functor &operator=(const functor &) = default;
     functor &operator=(functor &&) = default;
@@ -63,9 +65,11 @@ namespace lisk
     functor(basic_functor::function_type f);
     functor(wrapped_functor::wrapper_type w, wrapped_functor::function_type f);
 
-    template<typename ...ARGS>
+    template<typename... ARGS>
     functor(expression (*f)(environment &, bool, ARGS...))
-    : functor(&wrapper_function<ARGS...>, (void(*)())f) {}
+    : functor(&wrapper_function<ARGS...>, (void (*)())f)
+    {
+    }
 
     expression operator()(shared_list l,
                           environment &e,

@@ -32,15 +32,17 @@ namespace lisk
     "(?:([\\-\\+])?(\\d+)(\\.\\d+)?)|"
     "(?:([\\-\\+])?0x([a-f\\d]+)(\\.[a-f\\d]+)?)|"
     "(?:([\\-\\+])?0b([01]+))",
-    std::regex_constants::ECMAScript |
-    std::regex_constants::icase |
-    std::regex_constants::optimize);
+    std::regex_constants::ECMAScript | std::regex_constants::icase |
+      std::regex_constants::optimize);
 
   bool is_whitespace(const char c)
   {
     switch (c)
     {
-      case ' ': case '\n': case '\r': case '\t': return true;
+      case ' ':
+      case '\n':
+      case '\r':
+      case '\t': return true;
       default: return false;
     }
   }
@@ -49,7 +51,12 @@ namespace lisk
   {
     switch (c)
     {
-      case '(': case ')': case '[': case ']': case '{': case '}': return true;
+      case '(':
+      case ')':
+      case '[':
+      case ']':
+      case '{':
+      case '}': return true;
       default: return false;
     }
   }
@@ -61,15 +68,11 @@ namespace lisk
 
   bool is_nil(const expression &expr)
   {
-    return
-      (expr.is_list() && expr.as_list().value().is_null()) ||
-      (expr.is_atom() && expr.as_atom().is_nil());
+    return (expr.is_list() && expr.as_list().value().is_null()) ||
+           (expr.is_atom() && expr.as_atom().is_nil());
   }
 
-  bool is_null(const expression &expr)
-  {
-    return expr.is_null();
-  }
+  bool is_null(const expression &expr) { return expr.is_null(); }
 
   std::vector<string> tokenise(const string &str, size_t *chars_used)
   {
@@ -77,17 +80,16 @@ namespace lisk
     string buffer;
     size_t chars_read = 0;
 
-    auto begin_next = [&]
-    {
+    auto begin_next = [&] {
       if (!buffer.empty()) result.emplace_back(std::move(buffer));
       buffer.clear();
       if (chars_used) *chars_used = chars_read;
     };
 
-    bool in_string = false;
+    bool in_string          = false;
     bool is_string_escaping = false;
-    bool in_comment = false;
-    char string_char = 0;
+    bool in_comment         = false;
+    char string_char        = 0;
     for (const auto c : str)
     {
       ++chars_read;
@@ -99,11 +101,16 @@ namespace lisk
       {
         if (is_string_escaping)
         {
-          if      (c == 'n') buffer += '\n';
-          else if (c == 'r') buffer += '\r';
-          else if (c == 't') buffer += '\t';
-          else if (c == '0') buffer += '\0';
-          else               buffer += c;
+          if (c == 'n')
+            buffer += '\n';
+          else if (c == 'r')
+            buffer += '\r';
+          else if (c == 't')
+            buffer += '\t';
+          else if (c == '0')
+            buffer += '\0';
+          else
+            buffer += c;
           is_string_escaping = false;
         }
         else if (c == '\\')
@@ -127,9 +134,9 @@ namespace lisk
       else if (c == '"' || c == '\'')
       {
         buffer += c;
-        in_string = true;
+        in_string          = true;
         is_string_escaping = false;
-        string_char = c;
+        string_char        = c;
       }
       else if (is_whitespace(c))
       {
@@ -186,8 +193,7 @@ namespace lisk
       else
       {
         // unsigned int
-        result = static_cast<uint_t>(
-          std::stoull(match[2].str(), nullptr, 10));
+        result = static_cast<uint_t>(std::stoull(match[2].str(), nullptr, 10));
       }
     }
     else if (match[5].matched)
@@ -206,8 +212,7 @@ namespace lisk
       else
       {
         // unsigned int
-        result = static_cast<uint_t>(
-          std::stoull(match[5].str(), nullptr, 16));
+        result = static_cast<uint_t>(std::stoull(match[5].str(), nullptr, 16));
       }
     }
     else if (match[8].matched)
@@ -221,11 +226,11 @@ namespace lisk
       else
       {
         // unsigned int
-        result = static_cast<uint_t>(
-          std::stoull(match[8].str(), nullptr, 2));
+        result = static_cast<uint_t>(std::stoull(match[8].str(), nullptr, 2));
       }
     }
-    else return std::numeric_limits<real_t>::signaling_NaN();
+    else
+      return std::numeric_limits<real_t>::signaling_NaN();
 
     return result;
   }
@@ -241,8 +246,7 @@ namespace lisk
     shared_list root;
     std::vector<std::vector<shared_list>> stack;
 
-    auto push_element = [&]() -> shared_list
-    {
+    auto push_element = [&]() -> shared_list {
       if (stack.empty()) return {};
       // Get the previous nill element.
       shared_list old_element = stack.back().back();
@@ -261,10 +265,9 @@ namespace lisk
       return new_element;
     };
 
-    auto push_scope = [&]()
-    {
+    auto push_scope = [&]() {
       // Create the root element for the new stack.
-      auto scope = shared_list::create();
+      auto scope    = shared_list::create();
       scope.value() = expression::null{};
 
       // If this is the first scope, make sure to mark it as the root.
@@ -279,8 +282,7 @@ namespace lisk
       stack.back().emplace_back(scope);
     };
 
-    auto pop_scope = [&]()
-    {
+    auto pop_scope = [&]() {
       // Pop the scope off the stack.
       stack.pop_back();
     };
@@ -333,20 +335,15 @@ namespace lisk
     return eval(parse(root_tokenise(str)), env, true);
   }
 
-  bool reader::iterator::operator==(sentinel) const
-  {
-    return !ref;
-  }
+  bool reader::iterator::operator==(sentinel) const { return !ref; }
 
-  bool reader::iterator::operator!=(sentinel) const
-  {
-    return ref;
-  }
+  bool reader::iterator::operator!=(sentinel) const { return ref; }
 
   lisk::expression reader::iterator::operator*()
   {
     return lisk::eval(lisk::parse(ref.tokens.front()),
-                      ref.env, ref.allow_tail_eval);
+                      ref.env,
+                      ref.allow_tail_eval);
   }
 
   reader::iterator &reader::iterator::operator++()
@@ -357,7 +354,8 @@ namespace lisk
 
   reader::reader(const lisk::environment e, bool allow_tail)
   : env(e), allow_tail_eval(allow_tail)
-  {}
+  {
+  }
 
   void reader::clear()
   {
@@ -366,20 +364,11 @@ namespace lisk
     tokens.clear();
   }
 
-  reader::operator bool() const
-  {
-    return tokens.size() > 0;
-  }
+  reader::operator bool() const { return tokens.size() > 0; }
 
-  reader::iterator reader::begin()
-  {
-    return {*this};
-  }
+  reader::iterator reader::begin() { return {*this}; }
 
-  reader::iterator::sentinel reader::end() const
-  {
-    return {};
-  }
+  reader::iterator::sentinel reader::end() const { return {}; }
 
   reader &reader::operator+=(const lisk::string &str)
   {
@@ -411,7 +400,7 @@ namespace lisk
       if (scope_count == 0)
       {
         auto begin = token_buffer.begin();
-        auto end = it + 1;
+        auto end   = it + 1;
 
         if (tokens.empty() || !tokens.back().empty()) tokens.emplace_back();
         tokens.back().reserve(end - begin);
@@ -436,13 +425,13 @@ namespace lisk
       auto root = shared_list::create();
 
       shared_list previous = root;
-      shared_list l = root;
+      shared_list l        = root;
       for (const auto &node : env._map)
       {
         for (const auto &[key, value] : node.value)
         {
-          auto entry = shared_list::create();
-          entry.value() = atom{key};
+          auto entry         = shared_list::create();
+          entry.value()      = atom{key};
           entry.next_value() = value;
 
           l.value() = entry;
@@ -479,15 +468,19 @@ namespace lisk
     //     return atom::nil{};
     // }
 
-    expression conditional(environment &env, bool allow_tail, bool b,
-                           uneval_expr cond, uneval_expr alt)
+    expression conditional(environment &env,
+                           bool allow_tail,
+                           bool b,
+                           uneval_expr cond,
+                           uneval_expr alt)
     {
-      return b
-        ? eval(cond.expr, env, allow_tail)
-        : eval(alt.expr, env, allow_tail);
+      return b ? eval(cond.expr, env, allow_tail)
+               : eval(alt.expr, env, allow_tail);
     }
 
-    expression define(environment &env, bool allow_tail, symbol sym,
+    expression define(environment &env,
+                      bool allow_tail,
+                      symbol sym,
                       expression exp)
     {
       env.define_expr(sym, exp);
@@ -510,21 +503,27 @@ namespace lisk
       return result;
     }
 
-    expression repeat(environment &env, bool allow_tail, uint_t count,
+    expression repeat(environment &env,
+                      bool allow_tail,
+                      uint_t count,
                       uneval_expr exp)
     {
-      while (count --> 0) eval(exp.expr, env, allow_tail);
+      while (count-- > 0) eval(exp.expr, env, allow_tail);
       return atom::nil{};
     }
 
     expression repeat_while(environment &env, bool allow_tail, uneval_expr exp)
     {
-      while (!is_nil(eval(exp.expr, env, allow_tail)));
+      while (!is_nil(eval(exp.expr, env, allow_tail)))
+        ;
       return atom::nil{};
     }
 
-    expression foreach(environment &env, bool allow_tail, symbol sym,
-                       shared_list iterlist, uneval_expr exp)
+    expression foreach (environment &env,
+                        bool allow_tail,
+                        symbol sym,
+                        shared_list iterlist,
+                        uneval_expr exp)
     {
       for (const auto &node : iterlist)
       {
@@ -535,39 +534,42 @@ namespace lisk
       return atom::nil{};
     }
 
-    expression map(environment &env, bool allow_tail, shared_list iterlist,
+    expression map(environment &env,
+                   bool allow_tail,
+                   shared_list iterlist,
                    uneval_expr exp)
     {
       auto subexp = eval(exp.expr, env, allow_tail);
       if (functor f; subexp >> f)
       {
-        auto arg = shared_list::create();
+        auto arg    = shared_list::create();
         auto result = shared_list::create();
-        auto end = result;
+        auto end    = result;
         for (const auto &node : iterlist)
         {
-          arg.value() = node.value;
+          arg.value()      = node.value;
           end.next_value() = f(arg, env, allow_tail);
           ++end;
         }
         return ++result;
       }
-      else if (lambda lf; subexp  >> lf)
+      else if (lambda lf; subexp >> lf)
       {
-        auto arg = shared_list::create();
+        auto arg    = shared_list::create();
         auto result = shared_list::create();
-        auto end = result;
+        auto end    = result;
         for (const auto &node : iterlist)
         {
-          arg.value() = node.value;
+          arg.value()      = node.value;
           end.next_value() = lf(arg, env, allow_tail);
           ++end;
         }
         return ++result;
       }
-      else return subexp.visit([](auto &&a) {
-        return type_error("Map error", a, "a function or lambda");
-      });
+      else
+        return subexp.visit([](auto &&a) {
+          return type_error("Map error", a, "a function or lambda");
+        });
     }
 
     expression tail_call(shared_list list, environment &env, bool allow_tail)
@@ -590,7 +592,7 @@ namespace lisk
 
       // (lambda () list)
       shared_list lambda_list;
-      lambda_list.value() = shared_list::create();
+      lambda_list.value()      = shared_list::create();
       lambda_list.next_value() = list.value();
       lambda lmbd(lambda_list, tail_env, allow_tail);
       result.value() = callable(lmbd);
@@ -610,7 +612,9 @@ namespace lisk
       return l.next();
     }
 
-    expression cons(environment &env, bool allow_tail, expression exp,
+    expression cons(environment &env,
+                    bool allow_tail,
+                    expression exp,
                     shared_list l)
     {
       shared_list result;
@@ -649,11 +653,14 @@ namespace lisk
       return first;
     }
 
-    expression range_list(environment &env, bool allow_tail, number start,
-                          uint_t count, number step)
+    expression range_list(environment &env,
+                          bool allow_tail,
+                          number start,
+                          uint_t count,
+                          number step)
     {
       auto result = shared_list::create();
-      auto end = result;
+      auto end    = result;
       for (uint_t i = 0; i < count; ++i)
       {
         end.next_value() = atom{start + (step * number{i})};
@@ -674,7 +681,7 @@ namespace lisk
 
     expression make_uint(environment &env, bool allow_tail, expression exp)
     {
-      auto to_uint = [](auto && n) -> number { return uint_t(n); };
+      auto to_uint = [](auto &&n) -> number { return uint_t(n); };
       if (number n; exp >> n)
         return atom{n.visit(to_uint)};
       else if (string s; exp >> s)
@@ -685,7 +692,7 @@ namespace lisk
 
     expression make_sint(environment &env, bool allow_tail, expression exp)
     {
-      auto to_sint = [](auto && n) -> number { return sint_t(n); };
+      auto to_sint = [](auto &&n) -> number { return sint_t(n); };
       if (number n; exp >> n)
         return atom{n.visit(to_sint)};
       else if (string s; exp >> s)
@@ -696,7 +703,7 @@ namespace lisk
 
     expression make_real(environment &env, bool allow_tail, expression exp)
     {
-      auto to_real = [](auto && n) -> number { return (real_t)(n); };
+      auto to_real = [](auto &&n) -> number { return (real_t)(n); };
       if (number n; exp >> n)
         return atom{n.visit(to_real)};
       else if (string s; exp >> s)
@@ -717,8 +724,7 @@ namespace lisk
     {
       std::string str;
       std::getline(std::cin, str);
-      if (std::cin.good())
-        return expression{atom{string(std::move(str))}};
+      if (std::cin.good()) return expression{atom{string(std::move(str))}};
       return atom::nil{};
     }
 
@@ -742,8 +748,7 @@ namespace lisk
     expression print_line(shared_list l, environment &env, bool allow_tail)
     {
       // No arguments, just print a newline.
-      if (is_nil(l))
-        std::cout << "\n";
+      if (is_nil(l)) std::cout << "\n";
 
       expression result = eval(l.value(), env, allow_tail);
       // If the list evaluates to a pure string, then print it verbatim.
@@ -881,43 +886,43 @@ namespace lisk
 
       e.define_atom("pi", atom(number(3.14159L)));
 
-      e.define_functor("env",     &list_env);
-      e.define_functor("null?",   &null_check);
-      e.define_functor("nil?",    &nil_check);
-      e.define_functor("zero?",   &zero_check);
+      e.define_functor("env", &list_env);
+      e.define_functor("null?", &null_check);
+      e.define_functor("nil?", &nil_check);
+      e.define_functor("zero?", &zero_check);
       // e.define_functor("eq?",     &equal_check);
-      e.define_functor("if",      &conditional);
-      e.define_functor("define",  &define);
-      e.define_functor("eval",    &evaluate);
-      e.define_functor("begin",   &begin);
-      e.define_functor("repeat",  &repeat);
-      e.define_functor("while",   &repeat_while);
+      e.define_functor("if", &conditional);
+      e.define_functor("define", &define);
+      e.define_functor("eval", &evaluate);
+      e.define_functor("begin", &begin);
+      e.define_functor("repeat", &repeat);
+      e.define_functor("while", &repeat_while);
       e.define_functor("foreach", &foreach);
-      e.define_functor("map",     &map);
-      e.define_functor("tail",    &tail_call);
+      e.define_functor("map", &map);
+      e.define_functor("tail", &tail_call);
 
-      e.define_functor("car",     &car);
-      e.define_functor("cdr",     &cdr);
-      e.define_functor("cons",    &cons);
-      e.define_functor("join",    &join);
+      e.define_functor("car", &car);
+      e.define_functor("cdr", &cdr);
+      e.define_functor("cons", &cons);
+      e.define_functor("join", &join);
 
-      e.define_functor("range",   &range_list);
-      e.define_functor("list",    &make_list);
-      e.define_functor("lambda",  &make_lambda);
-      e.define_functor("uint",    &make_uint);
-      e.define_functor("sint",    &make_sint);
-      e.define_functor("real",    &make_real);
-      e.define_functor("string",  &make_string);
+      e.define_functor("range", &range_list);
+      e.define_functor("list", &make_list);
+      e.define_functor("lambda", &make_lambda);
+      e.define_functor("uint", &make_uint);
+      e.define_functor("sint", &make_sint);
+      e.define_functor("real", &make_real);
+      e.define_functor("string", &make_string);
 
-      e.define_functor("read",    &read_string);
-      e.define_functor("parse",   &parse_string);
-      e.define_functor("print",   &print_string);
+      e.define_functor("read", &read_string);
+      e.define_functor("parse", &parse_string);
+      e.define_functor("print", &print_string);
       e.define_functor("println", &print_line);
 
-      e.define_functor("+",       &add);
-      e.define_functor("-",       &sub);
-      e.define_functor("*",       &mul);
-      e.define_functor("/",       &div);
+      e.define_functor("+", &add);
+      e.define_functor("-", &sub);
+      e.define_functor("*", &mul);
+      e.define_functor("/", &div);
 
       return e;
     }

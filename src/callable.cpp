@@ -24,9 +24,9 @@ SOFTWARE.
 
 #include "lisk/callable.hpp"
 
-#include "lisk/lambda.hpp"
-#include "lisk/functor.hpp"
 #include "lisk/expression.hpp"
+#include "lisk/functor.hpp"
+#include "lisk/lambda.hpp"
 
 namespace lisk
 {
@@ -56,10 +56,7 @@ namespace lisk
     return *this;
   }
 
-  bool callable::is_null() const
-  {
-    return !_value;
-  }
+  bool callable::is_null() const { return !_value; }
 
   bool callable::is_lambda() const
   {
@@ -108,20 +105,14 @@ namespace lisk
     return std::get<lambda>(*_value);
   }
 
-  lambda &callable::as_lambda()
-  {
-    return std::get<lambda>(*_value);
-  }
+  lambda &callable::as_lambda() { return std::get<lambda>(*_value); }
 
   const functor &callable::as_functor() const
   {
     return std::get<functor>(*_value);
   }
 
-  functor &callable::as_functor()
-  {
-    return std::get<functor>(*_value);
-  }
+  functor &callable::as_functor() { return std::get<functor>(*_value); }
 
   expression callable::operator()(shared_list l,
                                   environment &e,

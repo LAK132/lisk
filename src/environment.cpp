@@ -62,10 +62,8 @@ namespace lisk
       if (const auto it = node.value.find(sym); it != node.value.end())
         return it->second;
 
-    return exception{
-      "Environment lookup failed, couldn't find '" + sym + "' in '" +
-      to_string(*this) + "'"
-    };
+    return exception{"Environment lookup failed, couldn't find '" + sym +
+                     "' in '" + to_string(*this) + "'"};
   }
 
   environment environment::clone(size_t depth) const
@@ -89,7 +87,7 @@ namespace lisk
     else
     {
       *this = clone(depth + 1);
-      while (depth --> 0 && _map._node->next)
+      while (depth-- > 0 && _map._node->next)
       {
         _map.next_value().merge(_map.value());
         _map++;

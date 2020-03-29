@@ -28,10 +28,7 @@ SOFTWARE.
 
 namespace lisk
 {
-  string to_string(const symbol &sym)
-  {
-    return sym;
-  }
+  string to_string(const symbol &sym) { return sym; }
 
   const string &type_name(const symbol &)
   {
@@ -41,9 +38,8 @@ namespace lisk
 
   string to_string(const string &str)
   {
-    auto result = str;
-    auto replace = [](string &str, const char c, const char *cstr)
-    {
+    auto result  = str;
+    auto replace = [](string &str, const char c, const char *cstr) {
       for (auto i = str.find(c); i != string::npos; i = str.find(c))
         str.replace(i, 1, cstr);
     };

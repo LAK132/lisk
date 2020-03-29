@@ -41,7 +41,7 @@ namespace lisk
   {
     std::variant<uint_t, sint_t, real_t> _value;
 
-    number() = default;
+    number()                = default;
     number(const number &n) = default;
 
     number &operator=(const number &n) = default;
@@ -77,10 +77,16 @@ namespace lisk
     real_t &as_real();
 
     template<typename LAMBDA>
-    auto visit(LAMBDA &&lambda) const { return std::visit(lambda, _value); }
+    auto visit(LAMBDA &&lambda) const
+    {
+      return std::visit(lambda, _value);
+    }
 
     template<typename LAMBDA>
-    auto visit(LAMBDA &&lambda) { return std::visit(lambda, _value); }
+    auto visit(LAMBDA &&lambda)
+    {
+      return std::visit(lambda, _value);
+    }
   };
 
   string to_string(const number &num);

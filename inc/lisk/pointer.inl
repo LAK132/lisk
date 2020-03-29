@@ -25,22 +25,19 @@ SOFTWARE.
 namespace lisk
 {
   template<typename T>
-  pointer::pointer(T *ptr)
-  : _type(typeid(T))
+  pointer::pointer(T *ptr) : _type(typeid(T))
   {
-    _value.emplace<void*>(ptr);
+    _value.emplace<void *>(ptr);
   }
 
   template<typename T>
-  pointer::pointer(const T *ptr)
-  : _type(typeid(T))
+  pointer::pointer(const T *ptr) : _type(typeid(T))
   {
-    _value.emplace<const void*>(ptr);
+    _value.emplace<const void *>(ptr);
   }
 
   template<typename T>
-  pointer::pointer(std::shared_ptr<T> ptr)
-  : _type(typeid(T))
+  pointer::pointer(std::shared_ptr<T> ptr) : _type(typeid(T))
   {
     _value.emplace<std::shared_ptr<void>>(ptr);
   }
@@ -48,7 +45,7 @@ namespace lisk
   template<typename T>
   pointer &pointer::operator=(T *ptr)
   {
-    _value.emplace<void*>(ptr);
+    _value.emplace<void *>(ptr);
     _type = std::type_index(typeid(T));
     return *this;
   }
@@ -56,7 +53,7 @@ namespace lisk
   template<typename T>
   pointer &pointer::operator=(const T *ptr)
   {
-    _value.emplace<const void*>(ptr);
+    _value.emplace<const void *>(ptr);
     _type = std::type_index(typeid(T));
     return *this;
   }
@@ -72,37 +69,34 @@ namespace lisk
   template<typename T>
   bool pointer::is_raw_ptr() const
   {
-    return
-      _type == std::type_index(typeid(T)) &&
-      std::holds_alternative<void*>(_value);
+    return _type == std::type_index(typeid(T)) &&
+           std::holds_alternative<void *>(_value);
   }
 
   template<typename T>
   bool pointer::is_raw_const_ptr() const
   {
-    return
-      _type == std::type_index(typeid(T)) &&
-      std::holds_alternative<const void*>(_value);
+    return _type == std::type_index(typeid(T)) &&
+           std::holds_alternative<const void *>(_value);
   }
 
   template<typename T>
   bool pointer::is_shared_ptr() const
   {
-    return
-      _type == std::type_index(typeid(T)) &&
-      std::holds_alternative<std::shared_ptr<void>>(_value);
+    return _type == std::type_index(typeid(T)) &&
+           std::holds_alternative<std::shared_ptr<void>>(_value);
   }
 
   template<typename T>
   T *pointer::as_raw_ptr() const
   {
-    return static_cast<T*>(std::get<void*>(_value));
+    return static_cast<T *>(std::get<void *>(_value));
   }
 
   template<typename T>
   const T *pointer::as_raw_const_ptr() const
   {
-    return static_cast<const T*>(std::get<const void*>(_value));
+    return static_cast<const T *>(std::get<const void *>(_value));
   }
 
   template<typename T>
@@ -154,4 +148,3 @@ namespace lisk
     return name;
   }
 }
-

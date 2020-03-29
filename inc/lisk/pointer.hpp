@@ -27,10 +27,10 @@ SOFTWARE.
 
 #include "string.hpp"
 
-#include <variant>
-#include <typeinfo>
-#include <typeindex>
 #include <memory>
+#include <typeindex>
+#include <typeinfo>
+#include <variant>
 
 namespace lisk
 {
@@ -38,12 +38,12 @@ namespace lisk
 
   struct pointer
   {
-    std::variant<void*, const void*, std::shared_ptr<void>> _value;
+    std::variant<void *, const void *, std::shared_ptr<void>> _value;
     std::type_index _type;
 
-    pointer() : _value((const void*)nullptr), _type(typeid(void)) {}
+    pointer() : _value((const void *)nullptr), _type(typeid(void)) {}
     pointer(const pointer &ptr) = default;
-    pointer(pointer &&ptr) = default;
+    pointer(pointer &&ptr)      = default;
 
     pointer &operator=(const pointer &ptr) = default;
     pointer &operator=(pointer &&ptr) = default;

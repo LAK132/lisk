@@ -32,7 +32,7 @@ namespace lisk
   shared_list eval_all(shared_list l, environment &e, bool allow_tail_eval)
   {
     auto result = shared_list::create();
-    auto end = result;
+    auto end    = result;
     for (const auto &node : l)
     {
       end.set_next(shared_list::create());
@@ -56,9 +56,9 @@ namespace lisk
       auto result = exp;
 
       for (callable c;
-           result.is_eval_list() &&
-           result.as_eval_list().list.value() >> c;
-           result = eval(c({}, e, false), e, false));
+           result.is_eval_list() && result.as_eval_list().list.value() >> c;
+           result = eval(c({}, e, false), e, false))
+        ;
 
       return result;
     }
@@ -105,11 +105,10 @@ namespace lisk
       }
       else
       {
-        return exception{
-          "Failed to eval sub-expression '" + to_string(l.value()) +
-          "' of '" + to_string(exp) + "', got '" + to_string(subexp) +
-          "', expected a symbol, atom or callable"
-        };
+        return exception{"Failed to eval sub-expression '" +
+                         to_string(l.value()) + "' of '" + to_string(exp) +
+                         "', got '" + to_string(subexp) +
+                         "', expected a symbol, atom or callable"};
       }
     }
     else if (exception exc; exp >> exc)
@@ -118,10 +117,9 @@ namespace lisk
     }
     else
     {
-      return exception{
-        "Failed to eval expression '" + to_string(exp) + "' type '" +
-        exp.visit([](auto &&a) { return type_name(a); }) + "'"
-      };
+      return exception{"Failed to eval expression '" + to_string(exp) +
+                       "' type '" +
+                       exp.visit([](auto &&a) { return type_name(a); }) + "'"};
     }
   }
 }

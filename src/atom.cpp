@@ -27,35 +27,17 @@ SOFTWARE.
 
 namespace lisk
 {
-  atom::atom(nil)
-  {
-    _value.emplace<nil>();
-  }
+  atom::atom(nil) { _value.emplace<nil>(); }
 
-  atom::atom(const symbol &sym)
-  {
-    _value.emplace<symbol>(sym);
-  }
+  atom::atom(const symbol &sym) { _value.emplace<symbol>(sym); }
 
-  atom::atom(const string &str)
-  {
-    _value.emplace<string>(str);
-  }
+  atom::atom(const string &str) { _value.emplace<string>(str); }
 
-  atom::atom(const number &num)
-  {
-    _value.emplace<number>(num);
-  }
+  atom::atom(const number &num) { _value.emplace<number>(num); }
 
-  atom::atom(bool b)
-  {
-    _value.emplace<bool>(b);
-  }
+  atom::atom(bool b) { _value.emplace<bool>(b); }
 
-  atom::atom(const pointer &ptr)
-  {
-    _value.emplace<pointer>(ptr);
-  }
+  atom::atom(const pointer &ptr) { _value.emplace<pointer>(ptr); }
 
   atom &atom::operator=(atom::nil)
   {
@@ -93,10 +75,7 @@ namespace lisk
     return *this;
   }
 
-  bool atom::is_nil() const
-  {
-    return std::holds_alternative<nil>(_value);
-  }
+  bool atom::is_nil() const { return std::holds_alternative<nil>(_value); }
 
   bool atom::is_symbol() const
   {
@@ -113,10 +92,7 @@ namespace lisk
     return std::holds_alternative<number>(_value);
   }
 
-  bool atom::is_bool() const
-  {
-    return std::holds_alternative<bool>(_value);
-  }
+  bool atom::is_bool() const { return std::holds_alternative<bool>(_value); }
 
   bool atom::is_pointer() const
   {
@@ -173,60 +149,27 @@ namespace lisk
     return is_pointer() ? &std::get<pointer>(_value) : nullptr;
   }
 
-  const symbol &atom::as_symbol() const
-  {
-    return std::get<symbol>(_value);
-  }
+  const symbol &atom::as_symbol() const { return std::get<symbol>(_value); }
 
-  symbol &atom::as_symbol()
-  {
-    return std::get<symbol>(_value);
-  }
+  symbol &atom::as_symbol() { return std::get<symbol>(_value); }
 
-  const string &atom::as_string() const
-  {
-    return std::get<string>(_value);
-  }
+  const string &atom::as_string() const { return std::get<string>(_value); }
 
-  string &atom::as_string()
-  {
-    return std::get<string>(_value);
-  }
+  string &atom::as_string() { return std::get<string>(_value); }
 
-  const number &atom::as_number() const
-  {
-    return std::get<number>(_value);
-  }
+  const number &atom::as_number() const { return std::get<number>(_value); }
 
-  number &atom::as_number()
-  {
-    return std::get<number>(_value);
-  }
+  number &atom::as_number() { return std::get<number>(_value); }
 
-  const bool &atom::as_bool() const
-  {
-    return std::get<bool>(_value);
-  }
+  const bool &atom::as_bool() const { return std::get<bool>(_value); }
 
-  bool &atom::as_bool()
-  {
-    return std::get<bool>(_value);
-  }
+  bool &atom::as_bool() { return std::get<bool>(_value); }
 
-  const pointer &atom::as_pointer() const
-  {
-    return std::get<pointer>(_value);
-  }
+  const pointer &atom::as_pointer() const { return std::get<pointer>(_value); }
 
-  pointer &atom::as_pointer()
-  {
-    return std::get<pointer>(_value);
-  }
+  pointer &atom::as_pointer() { return std::get<pointer>(_value); }
 
-  string to_string(atom::nil)
-  {
-    return "nil";
-  }
+  string to_string(atom::nil) { return "nil"; }
 
   const string &type_name(atom::nil)
   {
@@ -234,10 +177,7 @@ namespace lisk
     return name;
   }
 
-  string to_string(bool b)
-  {
-    return b ? "true" : "false";
-  }
+  string to_string(bool b) { return b ? "true" : "false"; }
 
   const string &type_name(bool)
   {
@@ -273,7 +213,8 @@ bool operator>>(const lisk::expression &arg, bool &out)
       out = false;
       return true;
     }
-    else return false;
+    else
+      return false;
   }
   else if (arg.is_atom())
   {
@@ -288,9 +229,11 @@ bool operator>>(const lisk::expression &arg, bool &out)
       out = false;
       return true;
     }
-    else return false;
+    else
+      return false;
   }
-  else return false;
+  else
+    return false;
 }
 
 bool operator>>(const lisk::expression &arg, lisk::atom &out)

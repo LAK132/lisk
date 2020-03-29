@@ -38,7 +38,7 @@ namespace lisk
     shared_list exp;
     environment captured_env;
 
-    lambda() = default;
+    lambda()               = default;
     lambda(const lambda &) = default;
     lambda &operator=(const lambda &) = default;
 

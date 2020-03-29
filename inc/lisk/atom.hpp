@@ -26,8 +26,8 @@ SOFTWARE.
 #define LISK_ATOM_HPP
 
 #include "number.hpp"
-#include "string.hpp"
 #include "pointer.hpp"
+#include "string.hpp"
 
 #include <variant>
 
@@ -37,13 +37,15 @@ namespace lisk
 
   struct atom
   {
-    struct nil {};
+    struct nil
+    {
+    };
 
     std::variant<nil, symbol, string, number, bool, pointer> _value;
 
-    atom() = default;
+    atom()              = default;
     atom(const atom &a) = default;
-    atom(atom &&a) = default;
+    atom(atom &&a)      = default;
 
     atom &operator=(const atom &expr) = default;
     atom &operator=(atom &&expr) = default;
@@ -100,10 +102,16 @@ namespace lisk
     pointer &as_pointer();
 
     template<typename LAMBDA>
-    auto visit(LAMBDA &&lambda) const { return std::visit(lambda, _value); }
+    auto visit(LAMBDA &&lambda) const
+    {
+      return std::visit(lambda, _value);
+    }
 
     template<typename LAMBDA>
-    auto visit(LAMBDA &&lambda) { return std::visit(lambda, _value); }
+    auto visit(LAMBDA &&lambda)
+    {
+      return std::visit(lambda, _value);
+    }
   };
 
   string to_string(atom::nil);

@@ -29,9 +29,7 @@ namespace lisk
   lambda::lambda(shared_list l, environment &e, bool allow_tail_eval)
   : captured_env(environment::extends(e))
   {
-    if (shared_list arg1, arg2;
-        l.value() >> arg1 &&
-        l.next().value() >> arg2)
+    if (shared_list arg1, arg2; l.value() >> arg1 && l.next().value() >> arg2)
     {
       params = arg1.clone();
 
@@ -78,20 +76,16 @@ namespace lisk
       else
       {
         return exception{
-          "Failed to get symbol " + std::to_string(param_index) + " "
-          "from '" + to_string(node.value) + "' "
-          "for '" + to_string(evaled) + "'"
-        };
+          "Failed to get symbol " + std::to_string(param_index) + " from '" +
+          to_string(node.value) + "' for '" + to_string(evaled) + "'"};
       }
     }
 
     if (reader)
     {
-      return exception{
-        "Too few parameters in '" + to_string(l) +
-        "' to call lambda, expected parameters are '" +
-        to_string(params) + "'"
-      };
+      return exception{"Too few parameters in '" + to_string(l) +
+                       "' to call lambda, expected parameters are '" +
+                       to_string(params) + "'"};
     }
 
     return eval(exp, new_env, allow_tail_eval);

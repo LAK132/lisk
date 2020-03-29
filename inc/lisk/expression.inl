@@ -26,7 +26,8 @@ template<typename T>
 bool operator>>(const lisk::expression &arg, T *&out)
 {
   if (!arg.is_atom() || !arg.as_atom().is_pointer() ||
-      !arg.as_atom().as_pointer().is_raw_ptr<T>()) return false;
+      !arg.as_atom().as_pointer().is_raw_ptr<T>())
+    return false;
 
   out = arg.as_atom().as_pointer().as_raw_ptr<T>();
   return true;
@@ -49,14 +50,16 @@ bool operator>>(const lisk::expression &arg, const T *&out)
     out = arg.as_atom().as_pointer().as_raw_ptr<T>();
     return true;
   }
-  else return false;
+  else
+    return false;
 }
 
 template<typename T>
 bool operator>>(const lisk::expression &arg, std::shared_ptr<T> &out)
 {
   if (!arg.is_atom() || !arg.as_atom().is_pointer() ||
-      !arg.as_atom().as_pointer().is_shared_ptr<T>()) return false;
+      !arg.as_atom().as_pointer().is_shared_ptr<T>())
+    return false;
 
   out = arg.as_atom().as_pointer().as_shared_ptr<T>();
   return true;

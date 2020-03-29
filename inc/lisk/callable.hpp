@@ -42,9 +42,9 @@ namespace lisk
     using value_type = std::variant<lambda, functor>;
     std::shared_ptr<value_type> _value;
 
-    callable() = default;
+    callable()                  = default;
     callable(const callable &c) = default;
-    callable(callable &&c) = default;
+    callable(callable &&c)      = default;
 
     callable &operator=(const callable &c) = default;
     callable &operator=(callable &&c) = default;

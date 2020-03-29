@@ -56,7 +56,8 @@ namespace lisk
       else
         return expression::null{};
     }
-    else return expression::null{};
+    else
+      return expression::null{};
   }
 
   string to_string(const functor &f)
@@ -64,17 +65,16 @@ namespace lisk
     if (std::holds_alternative<functor::basic_functor>(f._value))
     {
       auto &basic = std::get<functor::basic_functor>(f._value);
-      return "<builtin " +
-        std::to_string((uintptr_t)basic.function) + ">";
+      return "<builtin " + std::to_string((uintptr_t)basic.function) + ">";
     }
     else if (std::holds_alternative<functor::wrapped_functor>(f._value))
     {
       auto &wrapped = std::get<functor::wrapped_functor>(f._value);
-      return "<builtin " +
-        std::to_string((uintptr_t)wrapped.wrapper) + " " +
-        std::to_string((uintptr_t)wrapped.function) + ">";
+      return "<builtin " + std::to_string((uintptr_t)wrapped.wrapper) + " " +
+             std::to_string((uintptr_t)wrapped.function) + ">";
     }
-    else return to_string(expression::null{});
+    else
+      return to_string(expression::null{});
   }
 
   const string &type_name(const functor &)

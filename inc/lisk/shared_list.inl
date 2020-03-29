@@ -97,7 +97,7 @@ namespace lisk
   basic_shared_list<T> basic_shared_list<T>::next(size_t n) const
   {
     auto result = _node;
-    while (result && n --> 0) result = result->next;
+    while (result && n-- > 0) result = result->next;
     return {result};
   }
 
@@ -149,8 +149,8 @@ namespace lisk
   basic_shared_list<T> basic_shared_list<T>::clone(size_t depth) const
   {
     auto result = create();
-    auto last = result;
-    auto end = last;
+    auto last   = result;
+    auto end    = last;
     if (depth == 0)
     {
       for (const auto &node : *this)
@@ -165,7 +165,7 @@ namespace lisk
     else
     {
       auto iter = *this;
-      while (depth --> 0 && iter)
+      while (depth-- > 0 && iter)
       {
         last.value() = iter.value();
         last.set_next(create());
@@ -243,8 +243,7 @@ namespace lisk
       result += to_string(list.value());
       ++list;
       if (list) result += ' ';
-    }
-    while (list);
+    } while (list);
     result += ')';
 
     return result;

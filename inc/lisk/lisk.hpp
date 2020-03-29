@@ -35,13 +35,13 @@ SOFTWARE.
 #include "number.hpp"
 #include "shared_list.hpp"
 
-#include <vector>
 #include <memory>
-#include <unordered_map>
 #include <regex>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <variant>
+#include <vector>
 
 namespace lisk
 {
@@ -72,17 +72,17 @@ namespace lisk
                         const T &t,
                         const string &expected)
   {
-    return exception{
-      message + ": '" + to_string(t) + "' is '" + type_name(t) +
-      "', expected " + expected
-    };
+    return exception{message + ": '" + to_string(t) + "' is '" + type_name(t) +
+                     "', expected " + expected};
   }
 
   struct reader
   {
     struct iterator
     {
-      struct sentinel {};
+      struct sentinel
+      {
+      };
 
       reader &ref;
 
@@ -123,30 +123,48 @@ namespace lisk
     expression nil_check(environment &env, bool allow_tail, expression exp);
     expression zero_check(environment &env, bool allow_tail, number num);
     // expr equal_check(shared_list l, environment &env);
-    expression conditional(environment &env, bool allow_tail, bool b,
-                           uneval_expr cond, uneval_expr alt);
-    expression define(environment &env, bool allow_tail, symbol sym,
+    expression conditional(environment &env,
+                           bool allow_tail,
+                           bool b,
+                           uneval_expr cond,
+                           uneval_expr alt);
+    expression define(environment &env,
+                      bool allow_tail,
+                      symbol sym,
                       expression exp);
     expression evaluate(environment &env, bool allow_tail, expression exp);
     expression begin(shared_list l, environment &env, bool allow_tail);
-    expression repeat(environment &env, bool allow_tail, uint_t count,
+    expression repeat(environment &env,
+                      bool allow_tail,
+                      uint_t count,
                       uneval_expr exp);
-    expression repeat_while(environment &env, bool allow_tail,
+    expression repeat_while(environment &env,
+                            bool allow_tail,
                             uneval_expr exp);
-    expression foreach(environment &env, bool allow_tail, symbol sym,
-                       shared_list iterlist, uneval_expr exp);
-    expression map(environment &env, bool allow_tail, shared_list iterlist,
+    expression foreach (environment &env,
+                        bool allow_tail,
+                        symbol sym,
+                        shared_list iterlist,
+                        uneval_expr exp);
+    expression map(environment &env,
+                   bool allow_tail,
+                   shared_list iterlist,
                    uneval_expr exp);
     expression tail_call(shared_list l, environment &env, bool allow_tail);
 
     expression car(environment &env, bool allow_tail, shared_list l);
     expression cdr(environment &env, bool allow_tail, shared_list l);
-    expression cons(environment &env, bool allow_tail, expression exp,
+    expression cons(environment &env,
+                    bool allow_tail,
+                    expression exp,
                     shared_list l);
     expression join(shared_list l, environment &env, bool allow_tail);
 
-    expression range_list(environment &env, bool allow_tail, number start,
-                          uint_t count, number step);
+    expression range_list(environment &env,
+                          bool allow_tail,
+                          number start,
+                          uint_t count,
+                          number step);
     expression make_list(shared_list l, environment &env, bool allow_tail);
     expression make_lambda(shared_list l, environment &env, bool allow_tail);
     expression make_uint(environment &env, bool allow_tail, expression exp);

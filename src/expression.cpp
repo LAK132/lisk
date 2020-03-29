@@ -28,20 +28,11 @@ SOFTWARE.
 
 namespace lisk
 {
-  expression::expression(null)
-  {
-    _value.emplace<null>();
-  }
+  expression::expression(null) { _value.emplace<null>(); }
 
-  expression::expression(const atom &a)
-  {
-    _value.emplace<atom>(a);
-  }
+  expression::expression(const atom &a) { _value.emplace<atom>(a); }
 
-  expression::expression(atom::nil)
-  {
-    _value.emplace<atom>(atom::nil{});
-  }
+  expression::expression(atom::nil) { _value.emplace<atom>(atom::nil{}); }
 
   expression::expression(const shared_list &list)
   {
@@ -53,10 +44,7 @@ namespace lisk
     _value.emplace<eval_shared_list>(list);
   }
 
-  expression::expression(const callable &c)
-  {
-    _value.emplace<callable>(c);
-  }
+  expression::expression(const callable &c) { _value.emplace<callable>(c); }
 
   expression::expression(const exception &exc)
   {
@@ -185,25 +173,16 @@ namespace lisk
     return is_exception() ? &std::get<exception>(_value) : nullptr;
   }
 
-  const atom &expression::as_atom() const
-  {
-    return std::get<atom>(_value);
-  }
+  const atom &expression::as_atom() const { return std::get<atom>(_value); }
 
-  atom &expression::as_atom()
-  {
-    return std::get<atom>(_value);
-  }
+  atom &expression::as_atom() { return std::get<atom>(_value); }
 
   const shared_list &expression::as_list() const
   {
     return std::get<shared_list>(_value);
   }
 
-  shared_list &expression::as_list()
-  {
-    return std::get<shared_list>(_value);
-  }
+  shared_list &expression::as_list() { return std::get<shared_list>(_value); }
 
   const eval_shared_list &expression::as_eval_list() const
   {
@@ -220,20 +199,14 @@ namespace lisk
     return std::get<callable>(_value);
   }
 
-  callable &expression::as_callable()
-  {
-    return std::get<callable>(_value);
-  }
+  callable &expression::as_callable() { return std::get<callable>(_value); }
 
   const exception &expression::as_exception() const
   {
     return std::get<exception>(_value);
   }
 
-  exception &expression::as_exception()
-  {
-    return std::get<exception>(_value);
-  }
+  exception &expression::as_exception() { return std::get<exception>(_value); }
 
   const string &type_name(const shared_list &)
   {
@@ -243,7 +216,7 @@ namespace lisk
 
   string to_string(const eval_shared_list &list)
   {
-    return "<EVAL " + to_string((const shared_list&)list) + ">";
+    return "<EVAL " + to_string((const shared_list &)list) + ">";
   }
 
   const string &type_name(const eval_shared_list &)
@@ -254,7 +227,7 @@ namespace lisk
 
   string to_string(const uneval_shared_list &list)
   {
-    return "<UNEVAL " + to_string((const shared_list&)list) + ">";
+    return "<UNEVAL " + to_string((const shared_list &)list) + ">";
   }
 
   const string &type_name(const uneval_shared_list &)
@@ -285,10 +258,7 @@ namespace lisk
     return name;
   }
 
-  string to_string(expression::null)
-  {
-    return "null";
-  }
+  string to_string(expression::null) { return "null"; }
 
   const string &type_name(expression::null)
   {

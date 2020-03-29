@@ -39,12 +39,12 @@ namespace lisk
       basic_shared_list<std::unordered_map<symbol, expression>>;
     value_type _map = {};
 
-    environment() = default;
+    environment()                    = default;
     environment(const environment &) = default;
-    environment(environment &&) = default;
+    environment(environment &&)      = default;
 
-    environment& operator=(const environment &) = default;
-    environment& operator=(environment &&) = default;
+    environment &operator=(const environment &) = default;
+    environment &operator=(environment &&) = default;
 
     static environment extends(const environment &other);
 
