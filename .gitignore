@@ -4,9 +4,13 @@ bin/*
 obj/*
 ignore/*
 
+*/bin/*
+*/obj/*
+
 *.exe
 *.elf
 *.out
 *.pdb
 *.ilk
 *.log
+*.o
