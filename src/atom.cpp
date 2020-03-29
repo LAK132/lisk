@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "atom.hpp"
-#include "expression.hpp"
+#include "lisk/atom.hpp"
+#include "lisk/expression.hpp"
 
 namespace lisk
 {

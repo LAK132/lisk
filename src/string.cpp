@@ -22,28 +22,59 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "pointer.hpp"
-#include "expression.hpp"
+#include "lisk/string.hpp"
+
+#include "lisk/expression.hpp"
 
 namespace lisk
 {
-  string to_string(const pointer &)
+  string to_string(const symbol &sym)
   {
-    // :TODO: actually return the value.
-    return "<POINTER>";
+    return sym;
   }
 
-  const string &type_name(const pointer &)
+  const string &type_name(const symbol &)
   {
-    const static string name = "pointer";
+    const static string name = "symbol";
+    return name;
+  }
+
+  string to_string(const string &str)
+  {
+    auto result = str;
+    auto replace = [](string &str, const char c, const char *cstr)
+    {
+      for (auto i = str.find(c); i != string::npos; i = str.find(c))
+        str.replace(i, 1, cstr);
+    };
+    replace(result, '\n', "\\n");
+    replace(result, '\r', "\\r");
+    replace(result, '\t', "\\t");
+    replace(result, '\0', "\\0");
+    replace(result, '\"', "\\\"");
+
+    return "\"" + result + "\"";
+  }
+
+  const string &type_name(const string &)
+  {
+    const static string name = "string";
     return name;
   }
 }
 
-bool operator>>(const lisk::expression &arg, lisk::pointer &out)
+bool operator>>(const lisk::expression &arg, lisk::symbol &out)
 {
-  if (!arg.is_atom() || !arg.as_atom().is_pointer()) return false;
+  if (!arg.is_atom() || !arg.as_atom().is_symbol()) return false;
 
-  out = arg.as_atom().as_pointer();
+  out = arg.as_atom().as_symbol();
+  return true;
+}
+
+bool operator>>(const lisk::expression &arg, lisk::string &out)
+{
+  if (!arg.is_atom() || !arg.as_atom().is_string()) return false;
+
+  out = arg.as_atom().as_string();
   return true;
 }

@@ -22,9 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "expression.hpp"
+#include "lisk/expression.hpp"
 
-#include "eval.hpp"
+#include "lisk/eval.hpp"
 
 namespace lisk
 {

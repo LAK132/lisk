@@ -22,10 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "eval.hpp"
+#include "lisk/eval.hpp"
 
-#include "functor.hpp"
-#include "lambda.hpp"
+#include "lisk/functor.hpp"
+#include "lisk/lambda.hpp"
 
 namespace lisk
 {
