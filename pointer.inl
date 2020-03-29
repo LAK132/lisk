@@ -116,13 +116,13 @@ namespace lisk
   string to_string(T *)
   {
     // :TODO:
-    return "pointer";
+    return "<POINTER>";
   }
 
   template<typename T>
   const string &type_name(T *)
   {
-    const static string name = "user_ptr";
+    const static string name = "<" + type_name(T{}) + "*>";
     return name;
   }
 
@@ -130,13 +130,13 @@ namespace lisk
   string to_string(const T *)
   {
     // :TODO:
-    return "pointer";
+    return "<POINTER>";
   }
 
   template<typename T>
   const string &type_name(const T *)
   {
-    const static string name = "user_const_ptr";
+    const static string name = "<const " + type_name(T{}) + "*>";
     return name;
   }
 
@@ -144,13 +144,13 @@ namespace lisk
   string to_string(const std::shared_ptr<T> &)
   {
     // :TODO:
-    return "pointer";
+    return "<POINTER>";
   }
 
   template<typename T>
   const string &type_name(const std::shared_ptr<T> &)
   {
-    const static string name = "user_shared_ptr";
+    const static string name = "<managed " + type_name(T{}) + "*>";
     return name;
   }
 }
