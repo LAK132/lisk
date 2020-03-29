@@ -22,11 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "../lisk.hpp"
+#include <lisk/lisk.hpp>
 
 #include <iostream>
-#include <typeinfo>
 #include <typeindex>
+#include <typeinfo>
 
 // Create a new type.
 struct my_type
@@ -61,9 +61,8 @@ lisk::expression print_my_type_value(lisk::environment &e,
                                      bool allow_tail,
                                      std::shared_ptr<my_type> my)
 {
-  return my
-    ? function_taking_my_type(e, allow_tail, *my)
-    : lisk::expression::null{};
+  return my ? function_taking_my_type(e, allow_tail, *my)
+            : lisk::expression::null{};
 }
 
 lisk::expression create_my_type_ptr(lisk::environment &e, bool)
@@ -95,25 +94,26 @@ int main(int argc, char **argv)
 
   // Should cause a type error.
   std::cout << lisk::to_string(
-    lisk::eval_string("(print_my_type 1337)", default_env)) << "\n";
+                 lisk::eval_string("(print_my_type 1337)", default_env))
+            << "\n";
 
   // Should print "2048"
   lisk::eval_string(
-    "(begin"
-      "(define func (lambda (x n)"
-                     "(begin"
-                      //  "(println \"Called func\")"
-                      //  "(println (list x n))"
-                       "(if (zero? n)"
-                         "x"
-                         "(tail (func (* x 2) (- n 1)))"
-                       ")"
-                     ")"
-                   ")"
-      ")"
-      "(println (func 2 10))"
-      // "(exit)"
-    ")", default_env);
+    R"(; This is a comment!
+(begin
+  (define func
+    (lambda (x n)
+      (begin
+        ; (println "Called func")
+        ; (println (list x n))
+        (if (zero? n) x (tail (func (* x 2) (- n 1))))
+      )
+    )
+  )
+  (println (func 2 10))
+  ; (exit)
+))",
+    default_env);
 
   // REPL. Use "(exit)" to quit the program.
   while (running)

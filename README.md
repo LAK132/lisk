@@ -5,7 +5,7 @@ Make sure to `git submodule update --init` after cloning this repo.
 # Example usage
 
 ```cpp
-#include "lisk.hpp"
+#include <lisk/lisk.hpp>
 
 #include <iostream>
 
