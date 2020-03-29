@@ -150,6 +150,17 @@ namespace lisk
     return result;
   }
 
+  std::vector<string> root_tokenise(const string &str, size_t *chars_used)
+  {
+    auto result = tokenise(str, chars_used);
+    if (result.empty()) return {};
+
+    result.reserve(result.size() + 3);
+    result.insert(result.begin(), {"(", "begin"});
+    result.push_back(")");
+    return result;
+  }
+
   number parse_number(const string &token)
   {
     number result;
@@ -315,6 +326,11 @@ namespace lisk
   expression eval_string(const string &str, environment &env)
   {
     return eval(parse(tokenise(str)), env, true);
+  }
+
+  expression root_eval_string(const string &str, environment &env)
+  {
+    return eval(parse(root_tokenise(str)), env, true);
   }
 
   bool reader::iterator::operator==(sentinel) const

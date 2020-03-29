@@ -56,6 +56,8 @@ namespace lisk
 
   std::vector<string> tokenise(const string &str,
                                size_t *chars_used = nullptr);
+  std::vector<string> root_tokenise(const string &str,
+                                    size_t *chars_used = nullptr);
 
   number parse_number(const string &token);
   string parse_string(const string &token);
@@ -63,6 +65,7 @@ namespace lisk
 
   // Top level eval function.
   expression eval_string(const string &str, environment &env);
+  expression root_eval_string(const string &str, environment &env);
 
   template<typename T>
   expression type_error(const string &message,
