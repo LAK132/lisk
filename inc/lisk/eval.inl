@@ -81,7 +81,8 @@ namespace lisk
 
     list_reader reader(in_list, e, allow_tail);
 
-    [[maybe_unused]] auto _get_or_eval = [&](auto &&element, auto i) -> bool {
+    [[maybe_unused]] auto _get_or_eval = [&](auto &&element, auto i) -> bool
+    {
       if (!(reader >> element))
       {
         exc.message = "Failed to evaluate element " + std::to_string(i) +
@@ -127,8 +128,8 @@ namespace lisk
     if (!get_or_eval_arg_as(l, e, allow_tail, exc, args))
       return exc;
     else
-      return std::apply((expression(*)(environment &, bool, ARGS...))func,
-                        std::tuple_cat(std::forward_as_tuple(e, allow_tail),
-                                       args));
+      return std::apply(
+        (expression(*)(environment &, bool, ARGS...))func,
+        std::tuple_cat(std::forward_as_tuple(e, allow_tail), args));
   }
 }

@@ -80,7 +80,8 @@ namespace lisk
     string buffer;
     size_t chars_read = 0;
 
-    auto begin_next = [&] {
+    auto begin_next = [&]
+    {
       if (!buffer.empty()) result.emplace_back(std::move(buffer));
       buffer.clear();
       if (chars_used) *chars_used = chars_read;
@@ -246,7 +247,8 @@ namespace lisk
     shared_list root;
     std::vector<std::vector<shared_list>> stack;
 
-    auto push_element = [&]() -> shared_list {
+    auto push_element = [&]() -> shared_list
+    {
       if (stack.empty()) return {};
       // Get the previous nill element.
       shared_list old_element = stack.back().back();
@@ -265,7 +267,8 @@ namespace lisk
       return new_element;
     };
 
-    auto push_scope = [&]() {
+    auto push_scope = [&]()
+    {
       // Create the root element for the new stack.
       auto scope    = shared_list::create();
       scope.value() = expression::null{};
@@ -282,7 +285,8 @@ namespace lisk
       stack.back().emplace_back(scope);
     };
 
-    auto pop_scope = [&]() {
+    auto pop_scope = [&]()
+    {
       // Pop the scope off the stack.
       stack.pop_back();
     };
@@ -341,9 +345,8 @@ namespace lisk
 
   lisk::expression reader::iterator::operator*()
   {
-    return lisk::eval(lisk::parse(ref.tokens.front()),
-                      ref.env,
-                      ref.allow_tail_eval);
+    return lisk::eval(
+      lisk::parse(ref.tokens.front()), ref.env, ref.allow_tail_eval);
   }
 
   reader::iterator &reader::iterator::operator++()
@@ -564,9 +567,9 @@ namespace lisk
         return ++result;
       }
       else
-        return subexp.visit([](auto &&a) {
-          return type_error("Map error", a, "a function or lambda");
-        });
+        return subexp.visit(
+          [](auto &&a)
+          { return type_error("Map error", a, "a function or lambda"); });
     }
 
     expression tail_call(shared_list list, environment &env, bool allow_tail)
