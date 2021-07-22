@@ -32,87 +32,83 @@ namespace lisk
 {
   callable::callable(const lambda &l)
   {
-    _value = std::make_shared<value_type>();
-    _value->emplace<lambda>(l);
+    _value.emplace<std::shared_ptr<lambda>>(std::make_shared<lambda>(l));
   }
 
   callable::callable(const functor &f)
   {
-    _value = std::make_shared<value_type>();
-    _value->emplace<functor>(f);
+    _value.emplace<std::shared_ptr<functor>>(std::make_shared<functor>(f));
   }
 
   callable &callable::operator=(const lambda &l)
   {
-    _value = std::make_shared<value_type>();
-    _value->emplace<lambda>(l);
+    _value.emplace<std::shared_ptr<lambda>>(std::make_shared<lambda>(l));
     return *this;
   }
 
   callable &callable::operator=(const functor &f)
   {
-    _value = std::make_shared<value_type>();
-    _value->emplace<functor>(f);
+    _value.emplace<std::shared_ptr<functor>>(std::make_shared<functor>(f));
     return *this;
   }
 
-  bool callable::is_null() const { return !_value; }
+  bool callable::is_null() const { return !is_lambda() && !is_functor(); }
 
-  bool callable::is_lambda() const
-  {
-    return !is_null() && std::holds_alternative<lambda>(*_value);
-  }
+  bool callable::is_lambda() const { return get_lambda() != nullptr; }
 
-  bool callable::is_functor() const
-  {
-    return !is_null() && std::holds_alternative<functor>(*_value);
-  }
+  bool callable::is_functor() const { return get_functor() != nullptr; }
 
   const lambda *callable::get_lambda() const
   {
-    if (is_lambda())
-      return &std::get<lambda>(*_value);
+    if (std::holds_alternative<std::shared_ptr<lambda>>(_value))
+      return std::get<std::shared_ptr<lambda>>(_value).get();
     else
       return nullptr;
   }
 
   lambda *callable::get_lambda()
   {
-    if (is_lambda())
-      return &std::get<lambda>(*_value);
+    if (std::holds_alternative<std::shared_ptr<lambda>>(_value))
+      return std::get<std::shared_ptr<lambda>>(_value).get();
     else
       return nullptr;
   }
 
   const functor *callable::get_functor() const
   {
-    if (is_functor())
-      return &std::get<functor>(*_value);
+    if (std::holds_alternative<std::shared_ptr<functor>>(_value))
+      return std::get<std::shared_ptr<functor>>(_value).get();
     else
       return nullptr;
   }
 
   functor *callable::get_functor()
   {
-    if (is_functor())
-      return &std::get<functor>(*_value);
+    if (std::holds_alternative<std::shared_ptr<functor>>(_value))
+      return std::get<std::shared_ptr<functor>>(_value).get();
     else
       return nullptr;
   }
 
   const lambda &callable::as_lambda() const
   {
-    return std::get<lambda>(*_value);
+    return *std::get<std::shared_ptr<lambda>>(_value);
   }
 
-  lambda &callable::as_lambda() { return std::get<lambda>(*_value); }
+  lambda &callable::as_lambda()
+  {
+    return *std::get<std::shared_ptr<lambda>>(_value);
+  }
 
   const functor &callable::as_functor() const
   {
-    return std::get<functor>(*_value);
+    return *std::get<std::shared_ptr<functor>>(_value);
   }
 
-  functor &callable::as_functor() { return std::get<functor>(*_value); }
+  functor &callable::as_functor()
+  {
+    return *std::get<std::shared_ptr<functor>>(_value);
+  }
 
   expression callable::operator()(shared_list l,
                                   environment &e,
@@ -121,7 +117,7 @@ namespace lisk
     if (is_null()) return expression::null{};
 
     auto result = std::visit(
-      [&](auto &&func) { return func(l, e, allow_tail_eval); }, *_value);
+      [&](auto &&func) { return (*func)(l, e, allow_tail_eval); }, _value);
 
     if (allow_tail_eval && result.is_eval_list())
       result = eval(result, e, allow_tail_eval);
@@ -131,11 +127,10 @@ namespace lisk
 
   string to_string(const callable &c)
   {
-    if (c.is_null())
-      return to_string(expression::null{});
-    else
-      return std::visit([](auto &&func) { return to_string(func); },
-                        *c._value);
+    return std::visit(
+      [](auto &&func)
+      { return func ? to_string(*func) : to_string(expression::null{}); },
+      c._value);
   }
 
   const string &type_name(const callable &)

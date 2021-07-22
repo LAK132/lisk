@@ -35,6 +35,7 @@ SOFTWARE.
 #include "number.hpp"
 #include "shared_list.hpp"
 
+#include <deque>
 #include <memory>
 #include <regex>
 #include <string>

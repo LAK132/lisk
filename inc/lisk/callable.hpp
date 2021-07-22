@@ -39,8 +39,9 @@ namespace lisk
 
   struct callable
   {
-    using value_type = std::variant<lambda, functor>;
-    std::shared_ptr<value_type> _value;
+    using value_type =
+      std::variant<std::shared_ptr<lambda>, std::shared_ptr<functor>>;
+    value_type _value;
 
     callable()                  = default;
     callable(const callable &c) = default;

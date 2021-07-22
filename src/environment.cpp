@@ -28,7 +28,9 @@ namespace lisk
 {
   environment environment::extends(const environment &other)
   {
-    return {value_type::extends(other._map)};
+    environment result;
+    result._map = value_type::extends(other._map);
+    return result;
   }
 
   void environment::define_expr(const symbol &sym, const expression &expr)

@@ -420,7 +420,7 @@ namespace lisk
 
   namespace builtin
   {
-    expression list_env(environment &env, bool allow_tail)
+    expression list_env(environment &env, bool)
     {
       auto root = shared_list::create();
 
@@ -445,22 +445,22 @@ namespace lisk
       return root;
     }
 
-    expression null_check(environment &env, bool allow_tail, expression exp)
+    expression null_check(environment &, bool, expression exp)
     {
       return atom{is_null(exp)};
     }
 
-    expression nil_check(environment &env, bool allow_tail, expression exp)
+    expression nil_check(environment &, bool, expression exp)
     {
       return atom{is_nil(exp)};
     }
 
-    expression zero_check(environment &env, bool allow_tail, number num)
+    expression zero_check(environment &, bool, number num)
     {
       return atom{num.visit([](auto &&n) -> bool { return n == 0; })};
     }
 
-    // expression equal_check(shared_list l, environment &env)
+    // expression equal_check(shared_list l, environment &)
     // {
     //   if (eval(l.value(), e) == eval(l.next().value(), e))
     //     return expression{atom{number{uint_t{1U}}}};
@@ -478,10 +478,7 @@ namespace lisk
                : eval(alt.expr, env, allow_tail);
     }
 
-    expression define(environment &env,
-                      bool allow_tail,
-                      symbol sym,
-                      expression exp)
+    expression define(environment &env, bool, symbol sym, expression exp)
     {
       env.define_expr(sym, exp);
       return atom::nil{};
@@ -602,20 +599,11 @@ namespace lisk
       return eval_shared_list{result};
     }
 
-    expression car(environment &env, bool allow_tail, shared_list l)
-    {
-      return l.value();
-    }
+    expression car(environment &, bool, shared_list l) { return l.value(); }
 
-    expression cdr(environment &env, bool allow_tail, shared_list l)
-    {
-      return l.next();
-    }
+    expression cdr(environment &, bool, shared_list l) { return l.next(); }
 
-    expression cons(environment &env,
-                    bool allow_tail,
-                    expression exp,
-                    shared_list l)
+    expression cons(environment &, bool, expression exp, shared_list l)
     {
       shared_list result;
       result.value() = exp;
@@ -653,11 +641,8 @@ namespace lisk
       return first;
     }
 
-    expression range_list(environment &env,
-                          bool allow_tail,
-                          number start,
-                          uint_t count,
-                          number step)
+    expression range_list(
+      environment &, bool, number start, uint_t count, number step)
     {
       auto result = shared_list::create();
       auto end    = result;
@@ -679,7 +664,7 @@ namespace lisk
       return callable(lambda(l, env, allow_tail));
     }
 
-    expression make_uint(environment &env, bool allow_tail, expression exp)
+    expression make_uint(environment &, bool, expression exp)
     {
       auto to_uint = [](auto &&n) -> number { return uint_t(n); };
       if (number n; exp >> n)
@@ -690,7 +675,7 @@ namespace lisk
         return atom{parse_number(to_string(exp)).visit(to_uint)};
     }
 
-    expression make_sint(environment &env, bool allow_tail, expression exp)
+    expression make_sint(environment &, bool, expression exp)
     {
       auto to_sint = [](auto &&n) -> number { return sint_t(n); };
       if (number n; exp >> n)
@@ -701,7 +686,7 @@ namespace lisk
         return atom{parse_number(to_string(exp)).visit(to_sint)};
     }
 
-    expression make_real(environment &env, bool allow_tail, expression exp)
+    expression make_real(environment &, bool, expression exp)
     {
       auto to_real = [](auto &&n) -> number { return (real_t)(n); };
       if (number n; exp >> n)
@@ -712,7 +697,7 @@ namespace lisk
         return atom{parse_number(to_string(exp)).visit(to_real)};
     }
 
-    expression make_string(environment &env, bool allow_tail, expression exp)
+    expression make_string(environment &, bool, expression exp)
     {
       if (string s; exp >> s)
         return expression(s);
@@ -728,7 +713,7 @@ namespace lisk
       return atom::nil{};
     }
 
-    expression parse_string(environment &env, bool allow_tail, string str)
+    expression parse_string(environment &, bool, string str)
     {
       return parse(tokenise(str));
     }
