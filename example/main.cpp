@@ -1,27 +1,3 @@
-/*
-MIT License
-
-Copyright (c) 2020 LAK132
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
 #include <lisk/lisk.hpp>
 
 #include <iostream>
@@ -48,9 +24,7 @@ const lisk::string &type_name(const my_type &)
 }
 
 // We can now use this new type as a function parameter!
-lisk::expression function_taking_my_type(lisk::environment &e,
-                                         bool allow_tail,
-                                         my_type my)
+lisk::expression function_taking_my_type(lisk::environment &, bool, my_type my)
 {
   std::cout << "My type value: " << my.value << "\n";
 
@@ -65,29 +39,31 @@ lisk::expression print_my_type_value(lisk::environment &e,
             : lisk::expression::null{};
 }
 
-lisk::expression create_my_type_ptr(lisk::environment &e, bool)
+lisk::expression create_my_type_ptr(lisk::environment &, bool)
 {
   return lisk::atom(std::make_shared<my_type>(my_type{10U}));
 }
 
 bool running = true;
 
-lisk::expression exit(lisk::environment &e, bool)
+lisk::expression my_exit(lisk::environment &, bool)
 {
   running = false;
   return lisk::expression(lisk::atom(lisk::atom::nil{}));
 }
 
-int main(int argc, char **argv)
+int main()
 {
   using namespace std::string_literals;
 
   lisk::environment default_env = lisk::builtin::default_env();
-  default_env.define_functor("exit", exit);
+  default_env.define_functor("exit", LISK_FUNCTOR_WRAPPER(my_exit));
 
   // Add the functions using our new type to the lisk environment.
-  default_env.define_functor("print_my_type", &print_my_type_value);
-  default_env.define_functor("create_my_type", &create_my_type_ptr);
+  default_env.define_functor("print_my_type",
+                             LISK_FUNCTOR_WRAPPER(print_my_type_value));
+  default_env.define_functor("create_my_type",
+                             LISK_FUNCTOR_WRAPPER(create_my_type_ptr));
 
   // Should print "My type value: 10".
   lisk::eval_string("(print_my_type (create_my_type))", default_env);

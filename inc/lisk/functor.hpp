@@ -1,83 +1,85 @@
-/*
-MIT License
-
-Copyright (c) 2020 LAK132
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
 #ifndef LISK_FUNCTOR_HPP
 #define LISK_FUNCTOR_HPP
 
-#include "environment.hpp"
-#include "eval.hpp"
-#include "expression.hpp"
 #include "shared_list.hpp"
 
 #include <variant>
 
 namespace lisk
 {
-  struct functor
+  struct environment;
+  struct expression;
+
+  template<typename FUNC>
+  struct function_signature;
+
+  template<typename R, typename... ARGS>
+  struct function_signature<R (*)(ARGS...)>
   {
-    struct basic_functor
-    {
-      using function_type = expression (*)(shared_list, environment &, bool);
-      function_type function;
-    };
-
-    struct wrapped_functor
-    {
-      using function_type = void (*)();
-      using wrapper_type  = expression (*)(function_type,
-                                          shared_list,
-                                          environment &,
-                                          bool);
-      wrapper_type wrapper;
-      function_type function;
-    };
-
-    std::variant<std::monostate, basic_functor, wrapped_functor> _value;
-
-    functor()                = default;
-    functor(const functor &) = default;
-    functor(functor &&)      = default;
-
-    functor &operator=(const functor &) = default;
-    functor &operator=(functor &&) = default;
-
-    functor(basic_functor::function_type f);
-    functor(wrapped_functor::wrapper_type w, wrapped_functor::function_type f);
-
-    template<typename... ARGS>
-    functor(expression (*f)(environment &, bool, ARGS...))
-    : functor(&wrapper_function<ARGS...>, (void (*)())f)
-    {
-    }
-
-    expression operator()(shared_list l,
-                          environment &e,
-                          bool allow_tail_eval) const;
+    using return_type = R;
+    using arguments   = std::tuple<ARGS...>;
   };
 
-  string to_string(const functor &l);
-  const string &type_name(const functor &);
+  template<typename R, typename... ARGS>
+  struct function_signature<R(ARGS...)>
+  {
+    using return_type = R;
+    using arguments   = std::tuple<ARGS...>;
+  };
+
+  template<typename FUNC>
+  using function_return_t = typename function_signature<FUNC>::return_type;
+
+  template<typename FUNC>
+  using function_arguments_t = typename function_signature<FUNC>::arguments;
+
+  template<typename TUPLE>
+  struct as_functor_arguments;
+
+  template<typename... ARGS>
+  struct as_functor_arguments<std::tuple<environment &, bool, ARGS...>>
+  {
+    using arguments = std::tuple<ARGS...>;
+  };
+
+  template<typename TUPLE>
+  using as_functor_arguments_t =
+    typename as_functor_arguments<TUPLE>::arguments;
+
+  typedef std::pair<lisk::expression, size_t> (*functor)(
+    basic_shared_list<expression>, environment &, bool);
+
+#define LISK_FUNCTOR_WRAPPER(F)                                               \
+  static_cast<lisk::functor>(                                                 \
+    [](lisk::shared_list l,                                                   \
+       lisk::environment &e,                                                  \
+       bool allow_tail) -> std::pair<lisk::expression, size_t>                \
+    {                                                                         \
+      static_assert(                                                          \
+        std::is_same_v<                                                       \
+          std::tuple_element_t<0, lisk::function_arguments_t<decltype(F)>>,   \
+          lisk::environment &>);                                              \
+      static_assert(                                                          \
+        std::is_same_v<                                                       \
+          std::tuple_element_t<1, lisk::function_arguments_t<decltype(F)>>,   \
+          bool>);                                                             \
+      static_assert(std::is_same_v<lisk::function_return_t<decltype(F)>,      \
+                                   lisk::expression>);                        \
+      using arguments_t = lisk::as_functor_arguments_t<                       \
+        lisk::function_arguments_t<decltype(F)>>;                             \
+      arguments_t args;                                                       \
+      lisk::exception exc;                                                    \
+      if (!lisk::get_or_eval_arg_as(l, e, allow_tail, exc, args))             \
+        return {exc, 0};                                                      \
+      else                                                                    \
+        return {                                                              \
+          std::apply(                                                         \
+            F, std::tuple_cat(std::forward_as_tuple(e, allow_tail), args)),   \
+          std::tuple_size_v<arguments_t>};                                    \
+    })
+
+  string to_string(functor f);
+  const string &type_name(functor);
 }
 
 bool operator>>(const lisk::expression &arg, lisk::functor &out);

@@ -1,27 +1,3 @@
-/*
-MIT License
-
-Copyright (c) 2020 LAK132
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
 #include "eval.hpp"
 
 namespace lisk
@@ -70,12 +46,12 @@ namespace lisk
   }
 
   template<typename... TYPES, size_t... I>
-  bool _get_or_eval_arg_as(shared_list in_list,
-                           environment &e,
-                           bool allow_tail,
-                           exception &exc,
-                           std::tuple<TYPES...> &out_arg,
-                           std::index_sequence<I...>)
+  inline bool _get_or_eval_arg_as(shared_list in_list,
+                                  environment &e,
+                                  bool allow_tail,
+                                  exception &exc,
+                                  std::tuple<TYPES...> &out_arg,
+                                  std::index_sequence<I...>)
   {
     std::tuple<std::remove_cv_t<TYPES>...> result;
 
@@ -117,19 +93,9 @@ namespace lisk
                                std::index_sequence_for<TYPES...>{});
   }
 
-  template<typename... ARGS>
-  expression wrapper_function(void (*func)(),
-                              shared_list l,
-                              environment &e,
-                              bool allow_tail)
+  inline bool get_or_eval_arg_as(
+    shared_list, environment &, bool, exception &, std::tuple<> &)
   {
-    std::tuple<ARGS...> args;
-    exception exc;
-    if (!get_or_eval_arg_as(l, e, allow_tail, exc, args))
-      return exc;
-    else
-      return std::apply(
-        (expression(*)(environment &, bool, ARGS...))func,
-        std::tuple_cat(std::forward_as_tuple(e, allow_tail), args));
+    return true;
   }
 }

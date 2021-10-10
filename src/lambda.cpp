@@ -1,27 +1,3 @@
-/*
-MIT License
-
-Copyright (c) 2020 LAK132
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
 #include "lisk/lambda.hpp"
 
 namespace lisk
@@ -56,9 +32,9 @@ namespace lisk
     }
   }
 
-  expression lambda::operator()(shared_list l,
-                                environment &e,
-                                bool allow_tail_eval) const
+  std::pair<expression, size_t> lambda::operator()(shared_list l,
+                                                   environment &e,
+                                                   bool allow_tail_eval) const
   {
     auto new_env = environment::extends(captured_env);
 
@@ -68,27 +44,46 @@ namespace lisk
     for (const auto &node : l)
     {
       auto evaled = reader.list;
-      if (symbol s; reader >> s)
+      if (!reader)
+      {
+        if (param_index == 0)
+        {
+          return {
+            exception{"Too many arguments to call lambda, expected none"}, 0};
+        }
+        else
+        {
+          return {
+            exception{
+              "Too many arguments to call lambda, expected params are '" +
+              to_string(params) + "'"},
+            0};
+        }
+      }
+      else if (symbol s; reader >> s)
       {
         new_env.define_expr(s, eval(node.value, e, allow_tail_eval));
         ++param_index;
       }
       else
       {
-        return exception{
-          "Failed to get symbol " + std::to_string(param_index) + " from '" +
-          to_string(node.value) + "' for '" + to_string(evaled) + "'"};
+        return {exception{"Failed to get symbol " +
+                          std::to_string(param_index) + " from '" +
+                          to_string(node.value) + "' for '" +
+                          to_string(evaled) + "'"},
+                0};
       }
     }
 
     if (reader)
     {
-      return exception{"Too few parameters in '" + to_string(l) +
-                       "' to call lambda, expected parameters are '" +
-                       to_string(params) + "'"};
+      return {exception{"Too few parameters in '" + to_string(l) +
+                        "' to call lambda, expected parameters are '" +
+                        to_string(params) + "'"},
+              0};
     }
 
-    return eval(exp, new_env, allow_tail_eval);
+    return {eval(exp, new_env, allow_tail_eval), param_index};
   }
 
   string to_string(const lambda &l)

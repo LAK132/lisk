@@ -1,27 +1,3 @@
-/*
-MIT License
-
-Copyright (c) 2020 LAK132
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
 #include "lisk/lisk.hpp"
 
 #include <iostream>
@@ -298,7 +274,17 @@ namespace lisk
       {
         push_scope();
       }
-      else if (c == ')')
+      else if (c == '[')
+      {
+        push_scope();
+        push_element().value() = atom{symbol("list")};
+      }
+      else if (c == '{')
+      {
+        push_scope();
+        push_element().value() = atom{symbol("eval-stack")};
+      }
+      else if (c == ')' || c == ']' || c == '}')
       {
         pop_scope();
       }
@@ -492,13 +478,43 @@ namespace lisk
       return eval(exp, env, allow_tail);
     }
 
-    expression begin(shared_list l, environment &env, bool allow_tail)
+    std::pair<expression, size_t> evaluate_stack(shared_list l,
+                                                 environment &env,
+                                                 bool allow_tail)
+    {
+      shared_list head;
+      size_t input_length = 0;
+      for (; l; ++l, ++input_length)
+      {
+        auto expr = eval(l.value(), env, allow_tail);
+        if (callable c; expr >> c)
+        {
+          auto [result, pop_count] = c(head, env, allow_tail);
+          for (size_t i = 0; i < pop_count; ++i) ++head;
+          if (head) head = shared_list::extends(head);
+          head.value() = std::move(result);
+        }
+        else
+        {
+          if (head) head = shared_list::extends(head);
+          head.value() = expr;
+        }
+      }
+
+      return {expression{head}, input_length};
+    }
+
+    std::pair<expression, size_t> begin(shared_list l,
+                                        environment &env,
+                                        bool allow_tail)
     {
       // Evaluate every element in the list and return the result of the last.
-      expression result;
+      std::pair<expression, size_t> result;
+      result.second = 0;
       for (const auto &node : l)
       {
-        result = eval(node.value, env, allow_tail);
+        result.first = eval(node.value, env, allow_tail);
+        ++result.second;
       }
       return result;
     }
@@ -548,7 +564,7 @@ namespace lisk
         for (const auto &node : iterlist)
         {
           arg.value()      = node.value;
-          end.next_value() = f(arg, env, allow_tail);
+          end.next_value() = f(arg, env, allow_tail).first;
           ++end;
         }
         return ++result;
@@ -561,7 +577,7 @@ namespace lisk
         for (const auto &node : iterlist)
         {
           arg.value()      = node.value;
-          end.next_value() = lf(arg, env, allow_tail);
+          end.next_value() = lf(arg, env, allow_tail).first;
           ++end;
         }
         return ++result;
@@ -572,8 +588,12 @@ namespace lisk
           { return type_error("Map error", a, "a function or lambda"); });
     }
 
-    expression tail_call(shared_list list, environment &env, bool allow_tail)
+    std::pair<expression, size_t> tail_call(shared_list list,
+                                            environment &env,
+                                            bool allow_tail)
     {
+      // (tail (func args...))
+
       // grandp   parent   env
       // * ------ * ------ *
       //  `.
@@ -592,14 +612,13 @@ namespace lisk
 
       // (lambda () list)
       shared_list lambda_list;
-      lambda_list.value()      = shared_list::create();
-      lambda_list.next_value() = list.value();
-      lambda lmbd(lambda_list, tail_env, allow_tail);
-      result.value() = callable(lmbd);
+      lambda_list.value()      = shared_list::create(); // no arguments
+      lambda_list.next_value() = list.value();          // lambda body
+      result.value() = callable(lambda(lambda_list, tail_env, allow_tail));
 
       // Return an eval_shared_list containing a lambda that immediately
       // evaluates our list param.
-      return eval_shared_list{result};
+      return {eval_shared_list{result}, 1};
     }
 
     expression car(environment &, bool, shared_list l) { return l.value(); }
@@ -614,22 +633,27 @@ namespace lisk
       return result;
     }
 
-    expression join(shared_list l, environment &env, bool allow_tail)
+    std::pair<expression, size_t> join(shared_list l,
+                                       environment &env,
+                                       bool allow_tail)
     {
       shared_list first;
       shared_list end;
+      size_t count = 0;
 
       if (eval(l.value(), env, allow_tail) >> first)
       {
+        ++count;
         end = first.last();
       }
       else
       {
-        return type_error("Join error", l.value(), "a list");
+        return {type_error("Join error", l.value(), "a list"), 0};
       }
 
       for (const auto &node : l.next())
       {
+        ++count;
         if (shared_list next; eval(node.value, env, allow_tail) >> next)
         {
           end.set_next(next);
@@ -637,11 +661,11 @@ namespace lisk
         }
         else
         {
-          return type_error("Join error", node.value, "a list");
+          return {type_error("Join error", node.value, "a list"), 0};
         }
       }
 
-      return first;
+      return {first, count};
     }
 
     expression range_list(
@@ -657,14 +681,19 @@ namespace lisk
       return ++result;
     }
 
-    expression make_list(shared_list l, environment &env, bool allow_tail)
+    std::pair<expression, size_t> make_list(shared_list l,
+                                            environment &env,
+                                            bool allow_tail)
     {
       return eval_all(l, env, allow_tail);
     }
 
-    expression make_lambda(shared_list l, environment &env, bool allow_tail)
+    std::pair<expression, size_t> make_lambda(shared_list l,
+                                              environment &env,
+                                              bool allow_tail)
     {
-      return callable(lambda(l, env, allow_tail));
+      // :TODO: check that there's exactly 2 arguments
+      return {callable(lambda(l, env, allow_tail)), 2};
     }
 
     expression make_uint(environment &, bool, expression exp)
@@ -708,7 +737,7 @@ namespace lisk
         return expression(string{to_string(exp)});
     }
 
-    expression read_string(shared_list, environment &, bool)
+    expression read_string(environment &, bool)
     {
       std::string str;
       std::getline(std::cin, str);
@@ -721,7 +750,9 @@ namespace lisk
       return parse(tokenise(str));
     }
 
-    expression print_string(shared_list l, environment &env, bool allow_tail)
+    std::pair<expression, size_t> print_string(shared_list l,
+                                               environment &env,
+                                               bool allow_tail)
     {
       expression result = eval(l.value(), env, allow_tail);
       // If the list evaluates to a pure string, then print it verbatim.
@@ -730,10 +761,12 @@ namespace lisk
         std::cout << str;
       else
         std::cout << to_string(result);
-      return atom::nil{};
+      return {atom::nil{}, 1};
     }
 
-    expression print_line(shared_list l, environment &env, bool allow_tail)
+    std::pair<expression, size_t> print_line(shared_list l,
+                                             environment &env,
+                                             bool allow_tail)
     {
       // No arguments, just print a newline.
       if (is_nil(l)) std::cout << "\n";
@@ -745,127 +778,97 @@ namespace lisk
         std::cout << str << "\n";
       else
         std::cout << to_string(result) << "\n";
-      return atom::nil{};
+      return {atom::nil{}, 1};
     }
 
-    expression add(shared_list l, environment &env, bool allow_tail)
+    expression add(environment &, bool, number a, number b)
     {
-      if (!l) return atom::nil{};
+      return lisk::atom{a + b};
+    }
+
+    expression sub(environment &, bool, number a, number b)
+    {
+      return lisk::atom{a - b};
+    }
+
+    expression mul(environment &, bool, number a, number b)
+    {
+      return lisk::atom{a * b};
+    }
+
+    expression div(environment &, bool, number a, number b)
+    {
+      return lisk::atom{a / b};
+    }
+
+    std::pair<expression, size_t> sum(shared_list l,
+                                      environment &env,
+                                      bool allow_tail)
+    {
+      if (!l) return {atom::nil{}, 0};
 
       number result;
+      size_t count = 0;
 
       if (number n; eval(l.value(), env, allow_tail) >> n)
       {
+        ++count;
         result = n;
       }
       else
       {
-        return type_error("Add error", l.value(), "a number");
+        return {type_error("Add error", l.value(), "a number"), 0};
       }
 
       for (const auto &it : l.next())
       {
+        ++count;
         if (number n; eval(it.value, env, allow_tail) >> n)
         {
           result += n;
         }
         else
         {
-          return type_error("Add error", l.value(), "a number");
+          return {type_error("Add error", l.value(), "a number"), 0};
         }
       }
 
-      return expression{atom{result}};
+      return {expression{atom{result}}, count};
     }
 
-    expression sub(shared_list l, environment &env, bool allow_tail)
+    std::pair<expression, size_t> product(shared_list l,
+                                          environment &env,
+                                          bool allow_tail)
     {
-      if (!l) return atom::nil{};
+      if (!l) return {atom::nil{}, 0};
 
       number result;
+      size_t count = 0;
 
       if (number n; eval(l.value(), env, allow_tail) >> n)
       {
+        ++count;
         result = n;
       }
       else
       {
-        return type_error("Sub error", l.value(), "a number");
+        return {type_error("Mul error", l.value(), "a number"), 0};
       }
 
       for (const auto &it : l.next())
       {
-        if (number n; eval(it.value, env, allow_tail) >> n)
-        {
-          result -= n;
-        }
-        else
-        {
-          return type_error("Sub error", l.value(), "a number");
-        }
-      }
-
-      return expression{atom{result}};
-    }
-
-    expression mul(shared_list l, environment &env, bool allow_tail)
-    {
-      if (!l) return atom::nil{};
-
-      number result;
-
-      if (number n; eval(l.value(), env, allow_tail) >> n)
-      {
-        result = n;
-      }
-      else
-      {
-        return type_error("Mul error", l.value(), "a number");
-      }
-
-      for (const auto &it : l.next())
-      {
+        ++count;
         if (number n; eval(it.value, env, allow_tail) >> n)
         {
           result *= n;
         }
         else
         {
-          return type_error("Mul error", l.value(), "a number");
+          return {type_error("Mul error", l.value(), "a number"), 0};
         }
       }
 
-      return expression{atom{result}};
-    }
-
-    expression div(shared_list l, environment &env, bool allow_tail)
-    {
-      if (!l) return atom::nil{};
-
-      number result;
-
-      if (number n; eval(l.value(), env, allow_tail) >> n)
-      {
-        result = n;
-      }
-      else
-      {
-        return type_error("Div error", l.value(), "a number");
-      }
-
-      for (const auto &it : l.next())
-      {
-        if (number n; eval(it.value, env, allow_tail) >> n)
-        {
-          result /= n;
-        }
-        else
-        {
-          return type_error("Div error", l.value(), "a number");
-        }
-      }
-
-      return expression{atom{result}};
+      return {expression{atom{result}}, count};
     }
 
     environment default_env()
@@ -874,43 +877,47 @@ namespace lisk
 
       e.define_atom("pi", atom(number(3.14159L)));
 
-      e.define_functor("env", &list_env);
-      e.define_functor("null?", &null_check);
-      e.define_functor("nil?", &nil_check);
-      e.define_functor("zero?", &zero_check);
-      // e.define_functor("eq?",     &equal_check);
-      e.define_functor("if", &conditional);
-      e.define_functor("define", &define);
-      e.define_functor("eval", &evaluate);
-      e.define_functor("begin", &begin);
-      e.define_functor("repeat", &repeat);
-      e.define_functor("while", &repeat_while);
-      e.define_functor("foreach", &foreach);
-      e.define_functor("map", &map);
-      e.define_functor("tail", &tail_call);
+      e.define_functor("env", LISK_FUNCTOR_WRAPPER(list_env));
+      e.define_functor("null?", LISK_FUNCTOR_WRAPPER(null_check));
+      e.define_functor("nil?", LISK_FUNCTOR_WRAPPER(nil_check));
+      e.define_functor("zero?", LISK_FUNCTOR_WRAPPER(zero_check));
+      // e.define_functor("eq?", LISK_FUNCTOR_WRAPPER(equal_check));
+      e.define_functor("if", LISK_FUNCTOR_WRAPPER(conditional));
+      e.define_functor("define", LISK_FUNCTOR_WRAPPER(define));
+      e.define_functor("eval", LISK_FUNCTOR_WRAPPER(evaluate));
+      e.define_functor("eval-stack", evaluate_stack);
+      e.define_functor("begin", begin);
+      e.define_functor("repeat", LISK_FUNCTOR_WRAPPER(repeat));
+      e.define_functor("while", LISK_FUNCTOR_WRAPPER(repeat_while));
+      e.define_functor("foreach", LISK_FUNCTOR_WRAPPER(foreach));
+      e.define_functor("map", LISK_FUNCTOR_WRAPPER(map));
+      e.define_functor("tail", tail_call);
 
-      e.define_functor("car", &car);
-      e.define_functor("cdr", &cdr);
-      e.define_functor("cons", &cons);
-      e.define_functor("join", &join);
+      e.define_functor("car", LISK_FUNCTOR_WRAPPER(car));
+      e.define_functor("cdr", LISK_FUNCTOR_WRAPPER(cdr));
+      e.define_functor("cons", LISK_FUNCTOR_WRAPPER(cons));
+      e.define_functor("join", join);
 
-      e.define_functor("range", &range_list);
-      e.define_functor("list", &make_list);
-      e.define_functor("lambda", &make_lambda);
-      e.define_functor("uint", &make_uint);
-      e.define_functor("sint", &make_sint);
-      e.define_functor("real", &make_real);
-      e.define_functor("string", &make_string);
+      e.define_functor("range", LISK_FUNCTOR_WRAPPER(range_list));
+      e.define_functor("list", make_list);
+      e.define_functor("lambda", make_lambda);
+      e.define_functor("uint", LISK_FUNCTOR_WRAPPER(make_uint));
+      e.define_functor("sint", LISK_FUNCTOR_WRAPPER(make_sint));
+      e.define_functor("real", LISK_FUNCTOR_WRAPPER(make_real));
+      e.define_functor("string", LISK_FUNCTOR_WRAPPER(make_string));
 
-      e.define_functor("read", &read_string);
-      e.define_functor("parse", &parse_string);
-      e.define_functor("print", &print_string);
-      e.define_functor("println", &print_line);
+      e.define_functor("read", LISK_FUNCTOR_WRAPPER(read_string));
+      e.define_functor("parse", LISK_FUNCTOR_WRAPPER(parse_string));
+      e.define_functor("print", print_string);
+      e.define_functor("println", print_line);
 
-      e.define_functor("+", &add);
-      e.define_functor("-", &sub);
-      e.define_functor("*", &mul);
-      e.define_functor("/", &div);
+      e.define_functor("+", LISK_FUNCTOR_WRAPPER(add));
+      e.define_functor("-", LISK_FUNCTOR_WRAPPER(sub));
+      e.define_functor("*", LISK_FUNCTOR_WRAPPER(mul));
+      e.define_functor("/", LISK_FUNCTOR_WRAPPER(div));
+
+      e.define_functor("sum", sum);
+      e.define_functor("product", product);
 
       return e;
     }

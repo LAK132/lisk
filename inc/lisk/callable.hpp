@@ -1,30 +1,7 @@
-/*
-MIT License
-
-Copyright (c) 2020 LAK132
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
 #ifndef LISK_CALLABLE_HPP
 #define LISK_CALLABLE_HPP
 
+#include "functor.hpp"
 #include "shared_list.hpp"
 
 #include <memory>
@@ -35,13 +12,15 @@ namespace lisk
   struct expression;
   struct environment;
   struct lambda;
-  struct functor;
 
   struct callable
   {
     using value_type =
       std::variant<std::shared_ptr<lambda>, std::shared_ptr<functor>>;
     value_type _value;
+
+    // :TODO: add a way to track the number of arguments that a callable will
+    // take, and if it's variadic then make it return how many it read.
 
     callable()                  = default;
     callable(const callable &c) = default;
@@ -66,18 +45,16 @@ namespace lisk
     const lambda *get_lambda() const;
     lambda *get_lambda();
 
-    const functor *get_functor() const;
-    functor *get_functor();
+    functor *get_functor() const;
 
     const lambda &as_lambda() const;
     lambda &as_lambda();
 
-    const functor &as_functor() const;
-    functor &as_functor();
+    functor as_functor() const;
 
-    expression operator()(basic_shared_list<expression> l,
-                          environment &e,
-                          bool allow_tail_eval) const;
+    std::pair<expression, size_t> operator()(basic_shared_list<expression> l,
+                                             environment &e,
+                                             bool allow_tail_eval) const;
   };
 
   string to_string(const callable &c);

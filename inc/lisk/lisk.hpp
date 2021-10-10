@@ -1,27 +1,3 @@
-/*
-MIT License
-
-Copyright (c) 2020 LAK132
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
 #ifndef LISK_HPP
 #define LISK_HPP
 
@@ -134,7 +110,12 @@ namespace lisk
                       symbol sym,
                       expression exp);
     expression evaluate(environment &env, bool allow_tail, expression exp);
-    expression begin(shared_list l, environment &env, bool allow_tail);
+    std::pair<expression, size_t> evaluate_stack(shared_list l,
+                                                 environment &env,
+                                                 bool allow_tail);
+    std::pair<expression, size_t> begin(shared_list l,
+                                        environment &env,
+                                        bool allow_tail);
     expression repeat(environment &env,
                       bool allow_tail,
                       uint_t count,
@@ -151,7 +132,9 @@ namespace lisk
                    bool allow_tail,
                    shared_list iterlist,
                    uneval_expr exp);
-    expression tail_call(shared_list l, environment &env, bool allow_tail);
+    std::pair<expression, size_t> tail_call(shared_list l,
+                                            environment &env,
+                                            bool allow_tail);
 
     expression car(environment &env, bool allow_tail, shared_list l);
     expression cdr(environment &env, bool allow_tail, shared_list l);
@@ -159,29 +142,46 @@ namespace lisk
                     bool allow_tail,
                     expression exp,
                     shared_list l);
-    expression join(shared_list l, environment &env, bool allow_tail);
+    std::pair<expression, size_t> join(shared_list l,
+                                       environment &env,
+                                       bool allow_tail);
 
     expression range_list(environment &env,
                           bool allow_tail,
                           number start,
                           uint_t count,
                           number step);
-    expression make_list(shared_list l, environment &env, bool allow_tail);
-    expression make_lambda(shared_list l, environment &env, bool allow_tail);
+    std::pair<expression, size_t> make_list(shared_list l,
+                                            environment &env,
+                                            bool allow_tail);
+    std::pair<expression, size_t> make_lambda(shared_list l,
+                                              environment &env,
+                                              bool allow_tail);
     expression make_uint(environment &env, bool allow_tail, expression exp);
     expression make_sint(environment &env, bool allow_tail, expression exp);
     expression make_real(environment &env, bool allow_tail, expression exp);
     expression make_string(environment &env, bool allow_tail, expression exp);
 
-    expression read_string(shared_list, environment &, bool allow_tail);
+    expression read_string(environment &, bool allow_tail);
     expression parse_string(environment &env, bool allow_tail, string str);
-    expression print_string(shared_list l, environment &env, bool allow_tail);
-    expression print_line(shared_list l, environment &env, bool allow_tail);
+    std::pair<expression, size_t> print_string(shared_list l,
+                                               environment &env,
+                                               bool allow_tail);
+    std::pair<expression, size_t> print_line(shared_list l,
+                                             environment &env,
+                                             bool allow_tail);
 
-    expression add(shared_list l, environment &env, bool allow_tail);
-    expression sub(shared_list l, environment &env, bool allow_tail);
-    expression mul(shared_list l, environment &env, bool allow_tail);
-    expression div(shared_list l, environment &env, bool allow_tail);
+    expression add(environment &env, bool allow_tail, number a, number b);
+    expression sub(environment &env, bool allow_tail, number a, number b);
+    expression mul(environment &env, bool allow_tail, number a, number b);
+    expression div(environment &env, bool allow_tail, number a, number b);
+
+    std::pair<expression, size_t> sum(shared_list l,
+                                      environment &env,
+                                      bool allow_tail);
+    std::pair<expression, size_t> product(shared_list l,
+                                          environment &env,
+                                          bool allow_tail);
 
     environment default_env();
   };
