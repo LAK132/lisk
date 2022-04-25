@@ -325,6 +325,35 @@ namespace lisk
 		return eval(parse(root_tokenise(str)), env, true);
 	}
 
+	expression tail_eval(expression expr, environment &env, bool allow_tail)
+	{
+		// grandp   parent   env
+		// * ------ * ------ *
+		//  `.
+		//    `.
+		//      `* ------ * tail_env (env clone)
+		//    parent (clone)
+		environment tail_env = env.clone(2);
+		// grandp   parent   env
+		// * ------ * ------ *
+		//  `.
+		//    `.
+		//      `* tail_env (squashed env->parent clone)
+		tail_env.squash(2);
+
+		auto result = shared_list::create();
+
+		// (lambda () (expr))
+		shared_list lambda_list;
+		lambda_list.value()      = shared_list::create(); // no arguments
+		lambda_list.next_value() = expr;                  // lambda body
+		result.value() = callable(lambda(lambda_list, tail_env, allow_tail));
+
+		// Return an eval_shared_list containing a lambda that immediately
+		// evaluates our expr.
+		return eval_shared_list{result};
+	}
+
 	bool reader::iterator::operator==(sentinel) const { return !ref; }
 
 	bool reader::iterator::operator!=(sentinel) const { return ref; }
@@ -593,32 +622,7 @@ namespace lisk
 		                                        bool allow_tail)
 		{
 			// (tail (func args...))
-
-			// grandp   parent   env
-			// * ------ * ------ *
-			//  `.
-			//    `.
-			//      `* ------ * tail_env (env clone)
-			//    parent (clone)
-			environment tail_env = env.clone(2);
-			// grandp   parent   env
-			// * ------ * ------ *
-			//  `.
-			//    `.
-			//      `* tail_env (squashed env->parent clone)
-			tail_env.squash(2);
-
-			auto result = shared_list::create();
-
-			// (lambda () list)
-			shared_list lambda_list;
-			lambda_list.value()      = shared_list::create(); // no arguments
-			lambda_list.next_value() = list.value();          // lambda body
-			result.value() = callable(lambda(lambda_list, tail_env, allow_tail));
-
-			// Return an eval_shared_list containing a lambda that immediately
-			// evaluates our list param.
-			return {eval_shared_list{result}, 1};
+			return {tail_eval(list.value(), env, allow_tail), 1};
 		}
 
 		expression car(environment &, bool, shared_list l) { return l.value(); }

@@ -44,6 +44,9 @@ namespace lisk
 	expression eval_string(const string &str, environment &env);
 	expression root_eval_string(const string &str, environment &env);
 
+	// Delays evaluation of the expression.
+	expression tail_eval(expression expr, environment &env, bool allow_tail);
+
 	template<typename T>
 	expression type_error(const string &message,
 	                      const T &t,
