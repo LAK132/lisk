@@ -58,7 +58,7 @@ executable(
   'lisktest',
   'example/main.cpp',
   override_options: 'cpp_std=' + version,
-  include_directories: include_directories('inc'),
+  include_directories: include_directories('include'),
   dependencies: dependency('threads'),
   link_with: lisk,
 )
