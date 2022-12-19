@@ -1,11 +1,17 @@
 #ifndef LISK_CALLABLE_HPP
-#define LISK_CALLABLE_HPP
+#	define LISK_CALLABLE_HPP
 
-#include "functor.hpp"
-#include "shared_list.hpp"
+#	define LISK_ATOM_FORWARD_ONLY
+#	include "lisk/atom.hpp"
 
-#include <memory>
-#include <variant>
+#	define LISK_SHARED_LIST_FORWARD_ONLY
+#	include "lisk/shared_list.hpp"
+
+#	include "lisk/functor.hpp"
+
+#	include <lak/memory.hpp>
+#	include <lak/tuple.hpp>
+#	include <lak/variant.hpp>
 
 namespace lisk
 {
@@ -15,8 +21,8 @@ namespace lisk
 
 	struct callable
 	{
-		using value_type =
-		  std::variant<std::shared_ptr<lambda>, std::shared_ptr<functor>>;
+		using lambda_ptr = lak::shared_ptr<lisk::lambda>;
+		using value_type = lak::variant<lambda_ptr, lisk::functor>;
 		value_type _value;
 
 		// :TODO: add a way to track the number of arguments that a callable will
@@ -29,38 +35,45 @@ namespace lisk
 		callable &operator=(const callable &c) = default;
 		callable &operator=(callable &&c) = default;
 
-		callable(const lambda &l);
-		callable(const functor &f);
+		inline callable(const lisk::lambda &l);
+		inline callable(const lisk::functor &f);
 
-		callable &operator=(const lambda &l);
-		callable &operator=(const functor &f);
+		inline callable &operator=(const lisk::lambda &l);
+		inline callable &operator=(const lisk::functor &f);
 
-		bool is_null() const;
-		bool is_lambda() const;
-		bool is_functor() const;
+		inline bool is_null() const;
+		inline bool is_lambda() const;
+		inline bool is_functor() const;
 
 		inline bool empty() const { return is_null(); }
 		inline operator bool() const { return !is_null(); }
 
-		const lambda *get_lambda() const;
-		lambda *get_lambda();
+		inline lak::result<lisk::lambda &> get_lambda() &;
+		inline lak::result<const lisk::lambda &> get_lambda() const &;
+		inline lak::result<lisk::lambda> get_lambda() &&;
 
-		functor *get_functor() const;
+		inline lak::result<const lisk::functor &> get_functor() const;
 
-		const lambda &as_lambda() const;
-		lambda &as_lambda();
-
-		functor as_functor() const;
-
-		std::pair<expression, size_t> operator()(basic_shared_list<expression> l,
-		                                         environment &e,
-		                                         bool allow_tail_eval) const;
+		lak::pair<lisk::expression, size_t> operator()(
+		  lisk::basic_shared_list<lisk::expression> l,
+		  lisk::environment &e,
+		  bool allow_tail_eval) const;
 	};
 
-	string to_string(const callable &c);
-	const string &type_name(const callable &);
+	lisk::string to_string(const lisk::callable &c);
+	const lisk::string &type_name(const lisk::callable &);
 }
 
 bool operator>>(const lisk::expression &arg, lisk::callable &out);
 
+#	define LISK_CALLABLE_HPP_FINISHED
+#endif
+
+#ifdef LISK_CALLABLE_FORWARD_ONLY
+#	undef LISK_CALLABLE_FORWARD_ONLY
+#else
+#	if defined(LISK_CALLABLE_HPP_FINISHED) && !defined(LISK_CALLABLE_HPP_IMPL)
+#		define LISK_CALLABLE_HPP_IMPL
+#		include "callable.inl"
+#	endif
 #endif

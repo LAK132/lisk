@@ -1,27 +1,30 @@
 #include "lisk/functor.hpp"
+
 #include "lisk/eval.hpp"
+#include "lisk/expression.hpp"
 
-namespace lisk
+lisk::string lisk::to_string(lisk::functor f)
 {
-	string to_string(functor f)
-	{
-		return "<builtin " +
-		       std::to_string(
-		         reinterpret_cast<uintptr_t>(static_cast<void *>(f))) +
-		       ">";
-	}
+	return "<builtin " +
+	       std::to_string(reinterpret_cast<uintptr_t>(static_cast<void *>(f))) +
+	       ">";
+}
 
-	const string &type_name(const functor &)
-	{
-		const static string name = "functor";
-		return name;
-	}
+const lisk::string &lisk::type_name(const lisk::functor &)
+{
+	const static lisk::string name = "functor";
+	return name;
 }
 
 bool operator>>(const lisk::expression &arg, lisk::functor &out)
 {
-	if (!arg.is_callable() || !arg.as_callable().is_functor()) return false;
-
-	out = arg.as_callable().as_functor();
-	return true;
+	if_let_ok (const auto &callable, arg.get_callable())
+	{
+		if_let_ok (const auto &func, callable.get_functor())
+		{
+			out = func;
+			return true;
+		}
+	}
+	return false;
 }

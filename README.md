@@ -37,7 +37,7 @@ lisk::expression print_my_type(lisk::environment &e,
                                bool allow_tail_eval,
                                std::shared_ptr<my_type> my)
 {
-  std::cout << "My type value: " << lisk::to_string(my->value) << "\n";
+  std::cout << "My type value: " << to_string(my->value) << "\n";
   // Use nil when you don't really want to return anything.
   return lisk::atom::nil{};
 }
@@ -49,7 +49,7 @@ lisk::expression create_my_type(lisk::environment &e,
   // We can safely return shared_ptrs to any type we like. They must be stored
   // in a lisk::atom. Lisk makes use of C++'s RTTI to make sure you don't do
   // any invalid type conversions.
-  return lisk::atom(std::make_shared<my_type>(num));
+  return lisk::atom(lisk::pointer(lak::shared_ptr<my_type>::make(num)));
 }
 
 int main()

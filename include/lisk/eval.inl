@@ -1,63 +1,67 @@
 #include "eval.hpp"
 
-namespace lisk
+#include "lisk/expression.hpp"
+#include "lisk/shared_list.hpp"
+
+template<typename T>
+bool lisk::list_reader::operator>>(T &out)
 {
-	template<typename...>
-	struct _false : std::bool_constant<false>
+	static_assert(lisk::list_reader_traits<T>::allow_get ||
+	                lisk::list_reader_traits<T>::allow_eval,
+	              "Type must be get-able or eval-able");
+
+	if (!list) return false;
+
+	if constexpr (lisk::list_reader_traits<T>::allow_get &&
+	              lisk::list_reader_traits<T>::allow_eval)
 	{
-	};
-
-	template<typename T>
-	bool list_reader::operator>>(T &out)
-	{
-		static_assert(list_reader_traits<T>::allow_get ||
-		                list_reader_traits<T>::allow_eval,
-		              "Type must be get-able or eval-able");
-
-		if (!list) return false;
-
-		if constexpr (list_reader_traits<T>::allow_get &&
-		              list_reader_traits<T>::allow_eval)
+		if (list.value() >> out ||
+		    lisk::eval(list.value(), env, allow_tail_eval) >> out)
 		{
-			if (list.value() >> out ||
-			    eval(list.value(), env, allow_tail_eval) >> out)
-			{
-				++list;
-				return true;
-			}
+			++list;
+			return true;
 		}
-		else if constexpr (list_reader_traits<T>::allow_get)
-		{
-			if (list.value() >> out)
-			{
-				++list;
-				return true;
-			}
-		}
-		else if constexpr (list_reader_traits<T>::allow_eval)
-		{
-			if (eval(list.value(), env, allow_tail_eval) >> out)
-			{
-				++list;
-				return true;
-			}
-		}
-		return false;
 	}
-
-	template<typename... TYPES, size_t... I>
-	inline bool _get_or_eval_arg_as(shared_list in_list,
-	                                environment &e,
-	                                bool allow_tail,
-	                                exception &exc,
-	                                std::tuple<TYPES...> &out_arg,
-	                                std::index_sequence<I...>)
+	else if constexpr (lisk::list_reader_traits<T>::allow_get)
 	{
-		std::tuple<std::remove_cv_t<TYPES>...> result;
+		if (list.value() >> out)
+		{
+			++list;
+			return true;
+		}
+	}
+	else if constexpr (lisk::list_reader_traits<T>::allow_eval)
+	{
+		if (lisk::eval(list.value(), env, allow_tail_eval) >> out)
+		{
+			++list;
+			return true;
+		}
+	}
+	return false;
+}
 
-		list_reader reader(in_list, e, allow_tail);
+template<typename... TYPES>
+bool lisk::impl::get_or_eval_arg_as<TYPES...>(lisk::shared_list in_list,
+                                              lisk::environment &e,
+                                              bool allow_tail,
+                                              lisk::exception &exc,
+                                              lak::tuple<TYPES...> &out_arg)
+{
+	auto _get_or_eval_arg_as =
+	  []<typename... TYPES, size_t... I>(lisk::shared_list in_list,
+	                                     lisk::environment & e,
+	                                     bool allow_tail,
+	                                     lisk::exception &exc,
+	                                     lak::tuple<TYPES...> &out_arg,
+	                                     lak::index_sequence<I...>)
+	    ->bool
+	{
+		lak::tuple<lak::remove_cv_t<TYPES>...> result;
 
-		[[maybe_unused]] auto _get_or_eval = [&](auto &&element, auto i) -> bool
+		lisk::list_reader reader(in_list, e, allow_tail);
+
+		[[maybe_unused]] auto _get_or_eval = [&](auto &&element, size_t i) -> bool
 		{
 			if (!(reader >> element))
 			{
@@ -69,33 +73,22 @@ namespace lisk
 			}
 			return true;
 		};
-		if ((_get_or_eval(std::get<I>(result), I) && ...))
+		if ((_get_or_eval(result.template get<I>(), I) && ...))
 		{
 			out_arg = result;
 			return true;
 		}
 		else
 			return false;
-	}
+	};
 
-	template<typename... TYPES>
-	bool get_or_eval_arg_as(shared_list in_list,
-	                        environment &e,
-	                        bool allow_tail,
-	                        exception &exc,
-	                        std::tuple<TYPES...> &out_arg)
-	{
+	if constexpr (sizeof...(TYPES) == 0)
+		return true;
+	else
 		return _get_or_eval_arg_as(in_list,
 		                           e,
 		                           allow_tail,
 		                           exc,
 		                           out_arg,
-		                           std::index_sequence_for<TYPES...>{});
-	}
-
-	inline bool get_or_eval_arg_as(
-	  shared_list, environment &, bool, exception &, std::tuple<> &)
-	{
-		return true;
-	}
+		                           lak::index_sequence_for<TYPES...>{});
 }

@@ -1,243 +1,111 @@
 #include "lisk/number.hpp"
 
+#include "lisk/atom.hpp"
 #include "lisk/expression.hpp"
 
-#include <variant>
+#include <lak/variant.hpp>
 
-namespace lisk
+lisk::string lisk::to_string(const lisk::number &num)
 {
-	number::number(uint_t u) { _value.emplace<uint_t>(u); }
+	return lak::visit([](auto &&v) { return to_string(v); }, num._value);
+}
 
-	number::number(sint_t s) { _value.emplace<sint_t>(s); }
+const lisk::string &lisk::type_name(const lisk::number &)
+{
+	const static lisk::string name = "number";
+	return name;
+}
 
-	number::number(real_t r) { _value.emplace<real_t>(r); }
+lisk::string lisk::to_string(lisk::uint_t num)
+{
+	return std::to_string(num);
+}
 
-	number &number::operator=(uint_t u)
-	{
-		_value.emplace<uint_t>(u);
-		return *this;
-	}
+const lisk::string &lisk::type_name(lisk::uint_t)
+{
+	const static lisk::string name = "uint";
+	return name;
+}
 
-	number &number::operator=(sint_t s)
-	{
-		_value.emplace<sint_t>(s);
-		return *this;
-	}
+lisk::string lisk::to_string(lisk::sint_t num)
+{
+	return (num >= 0 ? "+" : "") + std::to_string(num);
+}
 
-	number &number::operator=(real_t r)
-	{
-		_value.emplace<real_t>(r);
-		return *this;
-	}
+const lisk::string &lisk::type_name(lisk::sint_t)
+{
+	const static lisk::string name = "sint";
+	return name;
+}
 
-	bool number::is_uint() const
-	{
-		return std::holds_alternative<uint_t>(_value);
-	}
+lisk::string lisk::to_string(lisk::real_t num)
+{
+	return (num >= 0.0 ? "+" : "") + std::to_string(num);
+}
 
-	bool number::is_sint() const
-	{
-		return std::holds_alternative<sint_t>(_value);
-	}
-
-	bool number::is_real() const
-	{
-		return std::holds_alternative<real_t>(_value);
-	}
-
-	const uint_t *number::get_uint() const
-	{
-		if (is_uint())
-			return &std::get<uint_t>(_value);
-		else
-			return nullptr;
-	}
-
-	uint_t *number::get_uint()
-	{
-		if (is_uint())
-			return &std::get<uint_t>(_value);
-		else
-			return nullptr;
-	}
-
-	const sint_t *number::get_sint() const
-	{
-		if (is_sint())
-			return &std::get<sint_t>(_value);
-		else
-			return nullptr;
-	}
-
-	sint_t *number::get_sint()
-	{
-		if (is_sint())
-			return &std::get<sint_t>(_value);
-		else
-			return nullptr;
-	}
-
-	const real_t *number::get_real() const
-	{
-		if (is_real())
-			return &std::get<real_t>(_value);
-		else
-			return nullptr;
-	}
-
-	real_t *number::get_real()
-	{
-		if (is_real())
-			return &std::get<real_t>(_value);
-		else
-			return nullptr;
-	}
-
-	const uint_t &number::as_uint() const { return std::get<uint_t>(_value); }
-
-	uint_t &number::as_uint() { return std::get<uint_t>(_value); }
-
-	const sint_t &number::as_sint() const { return std::get<sint_t>(_value); }
-
-	sint_t &number::as_sint() { return std::get<sint_t>(_value); }
-
-	const real_t &number::as_real() const { return std::get<real_t>(_value); }
-
-	real_t &number::as_real() { return std::get<real_t>(_value); }
-
-	string to_string(const number &num)
-	{
-		if (std::holds_alternative<uint_t>(num._value))
-			return lisk::to_string(std::get<uint_t>(num._value));
-
-		if (std::holds_alternative<sint_t>(num._value))
-			return lisk::to_string(std::get<sint_t>(num._value));
-
-		if (std::holds_alternative<real_t>(num._value))
-			return lisk::to_string(std::get<real_t>(num._value));
-
-		return "<NaN>";
-	}
-
-	const string &type_name(const number &)
-	{
-		const static string name = "number";
-		return name;
-	}
-
-	string to_string(uint_t num) { return std::to_string(num); }
-
-	const string &type_name(uint_t)
-	{
-		const static string name = "uint";
-		return name;
-	}
-
-	string to_string(sint_t num)
-	{
-		return (num >= 0 ? "+" : "") + std::to_string(num);
-	}
-
-	const string &type_name(sint_t)
-	{
-		const static string name = "sint";
-		return name;
-	}
-
-	string to_string(real_t num)
-	{
-		return (num >= 0.0 ? "+" : "") + std::to_string(num);
-	}
-
-	const string &type_name(real_t)
-	{
-		const static string name = "real";
-		return name;
-	}
+const lisk::string &lisk::type_name(lisk::real_t)
+{
+	const static lisk::string name = "real";
+	return name;
 }
 
 bool operator>>(const lisk::expression &arg, lisk::number &out)
 {
-	if (!arg.is_atom() || !arg.as_atom().is_number()) return false;
-
-	out = arg.as_atom().as_number();
-	return true;
+	if_let_ok (const auto &atom, arg.get_atom())
+	{
+		if_let_ok (const auto &num, atom.get_number())
+		{
+			out = num;
+			return true;
+		}
+	}
+	return false;
 }
 
 bool operator>>(const lisk::expression &arg, lisk::uint_t &out)
 {
-	if (!arg.is_atom() || !arg.as_atom().is_number() ||
-	    !arg.as_atom().as_number().is_uint())
-		return false;
-
-	out = arg.as_atom().as_number().as_uint();
-	return true;
+	if_let_ok (const auto &atom, arg.get_atom())
+	{
+		if_let_ok (const auto &num, atom.get_number())
+		{
+			if_let_ok (const auto &n, num.get_uint())
+			{
+				out = n;
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 bool operator>>(const lisk::expression &arg, lisk::sint_t &out)
 {
-	if (!arg.is_atom() || !arg.as_atom().is_number() ||
-	    !arg.as_atom().as_number().is_sint())
-		return false;
-
-	out = arg.as_atom().as_number().as_sint();
-	return true;
+	if_let_ok (const auto &atom, arg.get_atom())
+	{
+		if_let_ok (const auto &num, atom.get_number())
+		{
+			if_let_ok (const auto &n, num.get_sint())
+			{
+				out = n;
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 bool operator>>(const lisk::expression &arg, lisk::real_t &out)
 {
-	if (!arg.is_atom() || !arg.as_atom().is_number() ||
-	    !arg.as_atom().as_number().is_real())
-		return false;
-
-	out = arg.as_atom().as_number().as_real();
-	return true;
-}
-
-lisk::number operator+(lisk::number A, lisk::number B)
-{
-	return std::visit([](auto &&A, auto &&B) { return lisk::number(A + B); },
-	                  A._value,
-	                  B._value);
-}
-
-lisk::number operator-(lisk::number A, lisk::number B)
-{
-	return std::visit([](auto &&A, auto &&B) { return lisk::number(A - B); },
-	                  A._value,
-	                  B._value);
-}
-
-lisk::number operator*(lisk::number A, lisk::number B)
-{
-	return std::visit([](auto &&A, auto &&B) { return lisk::number(A * B); },
-	                  A._value,
-	                  B._value);
-}
-
-lisk::number operator/(lisk::number A, lisk::number B)
-{
-	return std::visit([](auto &&A, auto &&B) { return lisk::number(A / B); },
-	                  A._value,
-	                  B._value);
-}
-
-lisk::number &operator+=(lisk::number &A, lisk::number B)
-{
-	return A = A + B;
-}
-
-lisk::number &operator-=(lisk::number &A, lisk::number B)
-{
-	return A = A - B;
-}
-
-lisk::number &operator*=(lisk::number &A, lisk::number B)
-{
-	return A = A * B;
-}
-
-lisk::number &operator/=(lisk::number &A, lisk::number B)
-{
-	return A = A / B;
+	if_let_ok (const auto &atom, arg.get_atom())
+	{
+		if_let_ok (const auto &num, atom.get_number())
+		{
+			if_let_ok (const auto &n, num.get_real())
+			{
+				out = n;
+				return true;
+			}
+		}
+	}
+	return false;
 }

@@ -1,92 +1,93 @@
 #ifndef LISK_STRING_HPP
 #define LISK_STRING_HPP
 
-#include <string>
+#include <lak/string.hpp>
+#include <lak/utility.hpp>
 
 namespace lisk
 {
-	struct expression;
-
-	struct symbol : public std::string
+	struct symbol : public lak::astring
 	{
 		symbol()               = default;
 		symbol(const symbol &) = default;
 		symbol(symbol &&)      = default;
 
-		symbol(const std::string &value) : std::string(value) {}
-		symbol(std::string &&value) : std::string(std::move(value)) {}
-		symbol(const char *value) : std::string(value) {}
+		symbol(const lak::astring &value) : lak::astring(value) {}
+		symbol(lak::astring &&value) : lak::astring(lak::move(value)) {}
+		symbol(const char *value) : lak::astring(value) {}
 
 		symbol &operator=(const symbol &) = default;
 		symbol &operator=(symbol &&) = default;
 
-		symbol &operator=(const std::string &value)
+		symbol &operator=(const lak::astring &value)
 		{
-			std::string::operator=(value);
+			lak::astring::operator=(value);
 			return *this;
 		}
-		symbol &operator=(std::string &&value)
+		symbol &operator=(lak::astring &&value)
 		{
-			std::string::operator=(std::move(value));
+			lak::astring::operator=(lak::move(value));
 			return *this;
 		}
 		symbol &operator=(const char *value)
 		{
-			std::string::operator=(value);
+			lak::astring::operator=(value);
 			return *this;
 		}
 
-		using std::string::operator[];
+		using lak::astring::operator[];
 	};
 
-	struct string : public std::string
+	struct string : public lak::astring
 	{
 		string()               = default;
 		string(const string &) = default;
 		string(string &&)      = default;
 
-		string(const std::string &value) : std::string(value) {}
-		string(std::string &&value) : std::string(std::move(value)) {}
-		string(const char *value) : std::string(value) {}
+		string(const lak::astring &value) : lak::astring(value) {}
+		string(lak::astring &&value) : lak::astring(lak::move(value)) {}
+		string(const char *value) : lak::astring(value) {}
 
 		string &operator=(const string &) = default;
 		string &operator=(string &&) = default;
 
-		string &operator=(const std::string &value)
+		string &operator=(const lak::astring &value)
 		{
-			std::string::operator=(value);
+			lak::astring::operator=(value);
 			return *this;
 		}
-		string &operator=(std::string &&value)
+		string &operator=(lak::astring &&value)
 		{
-			std::string::operator=(std::move(value));
+			lak::astring::operator=(lak::move(value));
 			return *this;
 		}
 		string &operator=(const char *value)
 		{
-			std::string::operator=(value);
+			lak::astring::operator=(value);
 			return *this;
 		}
 
-		using std::string::operator[];
+		using lak::astring::operator[];
 	};
 
-	string to_string(const symbol &sym);
-	const string &type_name(const symbol &);
+	lisk::string to_string(const lisk::symbol &sym);
+	const lisk::string &type_name(const lisk::symbol &);
 
-	string to_string(const string &str);
-	const string &type_name(const string &);
+	lisk::string to_string(const lisk::string &str);
+	const lisk::string &type_name(const lisk::string &);
+
+	struct expression;
 }
 
 bool operator>>(const lisk::expression &arg, lisk::symbol &out);
 bool operator>>(const lisk::expression &arg, lisk::string &out);
 
 template<>
-struct std::hash<lisk::symbol> : public std::hash<std::string>
+struct std::hash<lisk::symbol> : public std::hash<lak::astring>
 {
 };
 template<>
-struct std::hash<lisk::string> : public std::hash<std::string>
+struct std::hash<lisk::string> : public std::hash<lak::astring>
 {
 };
 

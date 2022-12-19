@@ -33,7 +33,7 @@ lisk::expression function_taking_my_type(lisk::environment &, bool, my_type my)
 
 lisk::expression print_my_type_value(lisk::environment &e,
                                      bool allow_tail,
-                                     std::shared_ptr<my_type> my)
+                                     lak::shared_ptr<my_type> my)
 {
 	return my ? function_taking_my_type(e, allow_tail, *my)
 	          : lisk::expression::null{};
@@ -41,7 +41,7 @@ lisk::expression print_my_type_value(lisk::environment &e,
 
 lisk::expression create_my_type_ptr(lisk::environment &, bool)
 {
-	return lisk::atom(std::make_shared<my_type>(my_type{10U}));
+	return lisk::atom(lisk::pointer(lak::shared_ptr<my_type>::make(10U)));
 }
 
 bool running = true;
@@ -69,7 +69,7 @@ int main()
 	lisk::eval_string("(print_my_type (create_my_type))", default_env);
 
 	// Should cause a type error.
-	std::cout << lisk::to_string(
+	std::cout << to_string(
 	               lisk::eval_string("(print_my_type 1337)", default_env))
 	          << "\n";
 
@@ -105,7 +105,7 @@ int main()
 		const auto tokens = lisk::tokenise(string);
 		const auto expr   = lisk::parse(tokens);
 		const auto eval   = lisk::eval(expr, default_env, true);
-		const auto result = lisk::to_string(eval);
+		const auto result = to_string(eval);
 		std::cout << "lisk$ " << result << "\n";
 	}
 	std::cout << "\n";

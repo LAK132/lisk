@@ -1,0 +1,7 @@
+# testing options
+
+option('lak_enable_tests',
+	type: 'boolean',
+	value: false,
+	yield: true,
+)

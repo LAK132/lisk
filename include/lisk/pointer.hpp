@@ -1,23 +1,24 @@
 #ifndef LISK_POINTER_HPP
-#define LISK_POINTER_HPP
+#	define LISK_POINTER_HPP
 
-#include "string.hpp"
+#	include "lisk/string.hpp"
 
-#include <memory>
-#include <typeindex>
-#include <typeinfo>
-#include <variant>
+#	include <lak/memory.hpp>
+#	include <lak/variant.hpp>
+
+#	include <typeindex>
+#	include <typeinfo>
 
 namespace lisk
 {
-	struct expression;
-
 	struct pointer
 	{
-		std::variant<void *, const void *, std::shared_ptr<void>> _value;
+		using value_type =
+		  lak::variant<void *, const void *, lak::shared_ptr<void>>;
+		value_type _value;
 		std::type_index _type;
 
-		pointer() : _value((const void *)nullptr), _type(typeid(void)) {}
+		inline pointer() : _value((const void *)nullptr), _type(typeid(void)) {}
 		pointer(const pointer &ptr) = default;
 		pointer(pointer &&ptr)      = default;
 
@@ -29,14 +30,42 @@ namespace lisk
 		template<typename T>
 		pointer(const T *ptr);
 		template<typename T>
-		pointer(std::shared_ptr<T> ptr);
+		pointer(const lak::shared_ptr<T> &ptr);
 
 		template<typename T>
 		pointer &operator=(T *ptr);
 		template<typename T>
 		pointer &operator=(const T *ptr);
 		template<typename T>
-		pointer &operator=(std::shared_ptr<T> ptr);
+		pointer &operator=(const lak::shared_ptr<T> &ptr);
+
+		template<typename T>
+		lak::result<T *> get() const
+		{
+			if (_type != std::type_index(typeid(T))) return lak::err_t{};
+
+			if_let_ok (void *p, lak::get<void *>(_value)) return static_cast<T *>(p);
+
+			if constexpr (lak::is_const_v<T>)
+				if_let_ok (const void *p, lak::get<const void *>(_value))
+					return static_cast<T *>(p);
+
+			if_let_ok (const auto &p, lak::get<lak::shared_ptr<void>>(_value))
+				return static_cast<T *>(p.get());
+
+			return lak::err_t{};
+		}
+
+		template<typename T>
+		lak::result<lak::shared_ptr<T>> get_shared() const
+		{
+			if (_type != std::type_index(typeid(T))) return lak::err_t{};
+
+			if_let_ok (const auto &p, lak::get<lak::shared_ptr<void>>(_value))
+				return lak::ok_t{static_cast<lak::shared_ptr<T>>(p)};
+
+			return lak::err_t{};
+		}
 
 		template<typename T>
 		bool is_raw_ptr() const;
@@ -50,30 +79,40 @@ namespace lisk
 		template<typename T>
 		const T *as_raw_const_ptr() const;
 		template<typename T>
-		std::shared_ptr<T> as_shared_ptr() const;
+		lak::shared_ptr<T> as_shared_ptr() const;
 	};
 
-	string to_string(const pointer &);
-	const string &type_name(const pointer &);
+	lisk::string to_string(const lisk::pointer &);
+	const lisk::string &type_name(const lisk::pointer &);
 
 	template<typename T>
-	string to_string(T *);
+	lisk::string to_string(T *);
 	template<typename T>
-	const string &type_name(T *);
+	const lisk::string &type_name(T *);
 
 	template<typename T>
-	string to_string(const T *);
+	lisk::string to_string(const T *);
 	template<typename T>
-	const string &type_name(const T *);
+	const lisk::string &type_name(const T *);
 
 	template<typename T>
-	string to_string(const std::shared_ptr<T> &);
+	lisk::string to_string(const lak::shared_ptr<T> &);
 	template<typename T>
-	const string &type_name(const std::shared_ptr<T> &);
+	const lisk::string &type_name(const lak::shared_ptr<T> &);
+
+	struct expression;
 }
 
 bool operator>>(const lisk::expression &arg, lisk::pointer &out);
 
-#include "pointer.inl"
+#	define LISK_POINTER_HPP_FINISHED
+#endif
 
+#ifdef LISK_POINTER_FORWARD_ONLY
+#	undef LISK_POINTER_FORWARD_ONLY
+#else
+#	if defined(LISK_POINTER_HPP_FINISHED) && !defined(LISK_POINTER_HPP_IMPL)
+#		define LISK_POINTER_HPP_IMPL
+#		include "pointer.inl"
+#	endif
 #endif

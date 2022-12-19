@@ -1,24 +1,25 @@
 #ifndef LISK_HPP
 #define LISK_HPP
 
-#include "atom.hpp"
-#include "callable.hpp"
-#include "environment.hpp"
-#include "eval.hpp"
-#include "expression.hpp"
-#include "functor.hpp"
-#include "lambda.hpp"
-#include "number.hpp"
-#include "shared_list.hpp"
+#include "lisk/atom.hpp"
+#include "lisk/callable.hpp"
+#include "lisk/environment.hpp"
+#include "lisk/eval.hpp"
+#include "lisk/expression.hpp"
+#include "lisk/functor.hpp"
+#include "lisk/lambda.hpp"
+#include "lisk/number.hpp"
+#include "lisk/pointer.hpp"
+#include "lisk/shared_list.hpp"
 
-#include <deque>
-#include <memory>
+#include <lak/array.hpp>
+#include <lak/memory.hpp>
+#include <lak/string.hpp>
+#include <lak/tuple.hpp>
+#include <lak/variant.hpp>
+
 #include <regex>
-#include <string>
-#include <tuple>
 #include <unordered_map>
-#include <variant>
-#include <vector>
 
 namespace lisk
 {
@@ -26,34 +27,38 @@ namespace lisk
 
 	bool is_whitespace(const char c);
 	bool is_bracket(const char c);
-	bool is_numeric(const string &token);
+	bool is_numeric(const lisk::string &token);
 
-	bool is_nil(const expression &expr);
-	bool is_null(const expression &expr);
+	bool is_nil(const lisk::expression &expr);
+	bool is_null(const lisk::expression &expr);
 
-	std::vector<string> tokenise(const string &str,
-	                             size_t *chars_used = nullptr);
-	std::vector<string> root_tokenise(const string &str,
-	                                  size_t *chars_used = nullptr);
+	lak::vector<lisk::string> tokenise(const lisk::string &str,
+	                                   size_t *chars_used = nullptr);
+	lak::vector<lisk::string> root_tokenise(const lisk::string &str,
+	                                        size_t *chars_used = nullptr);
 
-	number parse_number(const string &token);
-	string parse_string(const string &token);
-	expression parse(const std::vector<string> &tokens);
+	lisk::number parse_number(const lisk::string &token);
+	lisk::string parse_string(const lisk::string &token);
+	lisk::expression parse(const lak::vector<lisk::string> &tokens);
 
 	// Top level eval function.
-	expression eval_string(const string &str, environment &env);
-	expression root_eval_string(const string &str, environment &env);
+	lisk::expression eval_string(const lisk::string &str,
+	                             lisk::environment &env);
+	lisk::expression root_eval_string(const lisk::string &str,
+	                                  lisk::environment &env);
 
 	// Delays evaluation of the expression.
-	expression tail_eval(expression expr, environment &env, bool allow_tail);
+	lisk::expression tail_eval(lisk::expression expr,
+	                           lisk::environment &env,
+	                           bool allow_tail);
 
 	template<typename T>
-	expression type_error(const string &message,
-	                      const T &t,
-	                      const string &expected)
+	lisk::expression type_error(const lisk::string &message,
+	                            const T &t,
+	                            const lisk::string &expected)
 	{
-		return exception{message + ": '" + to_string(t) + "' is '" + type_name(t) +
-		                 "', expected " + expected};
+		return lisk::exception{message + ": '" + to_string(t) + "' is '" +
+		                       type_name(t) + "', expected " + expected};
 	}
 
 	struct reader
@@ -82,8 +87,8 @@ namespace lisk
 		bool allow_tail_eval;
 
 		lisk::string string_buffer;
-		std::vector<lisk::string> token_buffer;
-		std::deque<std::vector<lisk::string>> tokens;
+		lak::vector<lisk::string> token_buffer;
+		lak::vector<lak::vector<lisk::string>> tokens;
 
 		void clear();
 
@@ -98,95 +103,180 @@ namespace lisk
 
 	namespace builtin
 	{
-		expression list_env(environment &env, bool allow_tail);
-		expression null_check(environment &env, bool allow_tail, expression exp);
-		expression nil_check(environment &env, bool allow_tail, expression exp);
-		expression zero_check(environment &env, bool allow_tail, number num);
-		// expr equal_check(shared_list l, environment &env);
-		expression conditional(environment &env,
-		                       bool allow_tail,
-		                       bool b,
-		                       uneval_expr cond,
-		                       uneval_expr alt);
-		expression define(environment &env,
-		                  bool allow_tail,
-		                  symbol sym,
-		                  expression exp);
-		expression evaluate(environment &env, bool allow_tail, expression exp);
-		std::pair<expression, size_t> evaluate_stack(shared_list l,
-		                                             environment &env,
-		                                             bool allow_tail);
-		std::pair<expression, size_t> begin(shared_list l,
-		                                    environment &env,
-		                                    bool allow_tail);
-		expression repeat(environment &env,
-		                  bool allow_tail,
-		                  uint_t count,
-		                  uneval_expr exp);
-		expression repeat_while(environment &env,
+		/* --- env --- */
+
+		lisk::expression list_env(lisk::environment &env, bool allow_tail);
+
+		lisk::environment default_env();
+
+		/* --- check --- */
+
+		lisk::expression null_check(lisk::environment &env,
+		                            bool allow_tail,
+		                            lisk::expression exp);
+
+		lisk::expression nil_check(lisk::environment &env,
+		                           bool allow_tail,
+		                           lisk::expression exp);
+
+		lisk::expression zero_check(lisk::environment &env,
+		                            bool allow_tail,
+		                            lisk::number num);
+
+		// expr equal_check(lisk::shared_list l, lisk::environment &env);
+
+		/* --- --- */
+
+		lisk::expression conditional(lisk::environment &env,
+		                             bool allow_tail,
+		                             bool b,
+		                             lisk::uneval_expr cond,
+		                             lisk::uneval_expr alt);
+
+		/* --- --- */
+
+		lisk::expression define(lisk::environment &env,
 		                        bool allow_tail,
-		                        uneval_expr exp);
-		expression foreach (environment &env,
-		                    bool allow_tail,
-		                    symbol sym,
-		                    shared_list iterlist,
-		                    uneval_expr exp);
-		expression map(environment &env,
-		               bool allow_tail,
-		               shared_list iterlist,
-		               uneval_expr exp);
-		std::pair<expression, size_t> tail_call(shared_list l,
-		                                        environment &env,
-		                                        bool allow_tail);
+		                        lisk::symbol sym,
+		                        lisk::expression exp);
 
-		expression car(environment &env, bool allow_tail, shared_list l);
-		expression cdr(environment &env, bool allow_tail, shared_list l);
-		expression cons(environment &env,
-		                bool allow_tail,
-		                expression exp,
-		                shared_list l);
-		std::pair<expression, size_t> join(shared_list l,
-		                                   environment &env,
-		                                   bool allow_tail);
+		lisk::expression evaluate(lisk::environment &env,
+		                          bool allow_tail,
+		                          lisk::expression exp);
 
-		expression range_list(environment &env,
-		                      bool allow_tail,
-		                      number start,
-		                      uint_t count,
-		                      number step);
-		std::pair<expression, size_t> make_list(shared_list l,
-		                                        environment &env,
-		                                        bool allow_tail);
-		std::pair<expression, size_t> make_lambda(shared_list l,
-		                                          environment &env,
+		lak::pair<lisk::expression, size_t> evaluate_stack(lisk::shared_list l,
+		                                                   lisk::environment &env,
+		                                                   bool allow_tail);
+
+		/* --- --- */
+
+		lak::pair<lisk::expression, size_t> begin(lisk::shared_list l,
+		                                          lisk::environment &env,
 		                                          bool allow_tail);
-		expression make_uint(environment &env, bool allow_tail, expression exp);
-		expression make_sint(environment &env, bool allow_tail, expression exp);
-		expression make_real(environment &env, bool allow_tail, expression exp);
-		expression make_string(environment &env, bool allow_tail, expression exp);
 
-		expression read_string(environment &, bool allow_tail);
-		expression parse_string(environment &env, bool allow_tail, string str);
-		std::pair<expression, size_t> print_string(shared_list l,
-		                                           environment &env,
-		                                           bool allow_tail);
-		std::pair<expression, size_t> print_line(shared_list l,
-		                                         environment &env,
+		lisk::expression repeat(lisk::environment &env,
+		                        bool allow_tail,
+		                        lisk::uint_t count,
+		                        lisk::uneval_expr exp);
+
+		lisk::expression repeat_while(lisk::environment &env,
+		                              bool allow_tail,
+		                              lisk::uneval_expr exp);
+
+		lisk::expression foreach (lisk::environment &env,
+		                          bool allow_tail,
+		                          lisk::symbol sym,
+		                          lisk::shared_list iterlist,
+		                          lisk::uneval_expr exp);
+
+		lisk::expression map(lisk::environment &env,
+		                     bool allow_tail,
+		                     lisk::shared_list iterlist,
+		                     lisk::uneval_expr exp);
+
+		lak::pair<lisk::expression, size_t> tail_call(lisk::shared_list l,
+		                                              lisk::environment &env,
+		                                              bool allow_tail);
+
+		/* --- --- */
+
+		lisk::expression car(lisk::environment &env,
+		                     bool allow_tail,
+		                     lisk::shared_list l);
+
+		lisk::expression cdr(lisk::environment &env,
+		                     bool allow_tail,
+		                     lisk::shared_list l);
+
+		lisk::expression cons(lisk::environment &env,
+		                      bool allow_tail,
+		                      lisk::expression exp,
+		                      lisk::shared_list l);
+
+		lak::pair<lisk::expression, size_t> join(lisk::shared_list l,
+		                                         lisk::environment &env,
 		                                         bool allow_tail);
 
-		expression add(environment &env, bool allow_tail, number a, number b);
-		expression sub(environment &env, bool allow_tail, number a, number b);
-		expression mul(environment &env, bool allow_tail, number a, number b);
-		expression div(environment &env, bool allow_tail, number a, number b);
+		/* ---  --- */
 
-		std::pair<expression, size_t> sum(shared_list l,
-		                                  environment &env,
-		                                  bool allow_tail);
-		std::pair<expression, size_t> product(shared_list l,
-		                                      environment &env,
-		                                      bool allow_tail);
+		lisk::expression range_list(lisk::environment &env,
+		                            bool allow_tail,
+		                            lisk::number start,
+		                            lisk::uint_t count,
+		                            lisk::number step);
 
-		environment default_env();
+		/* --- constructor --- */
+
+		lak::pair<lisk::expression, size_t> make_list(lisk::shared_list l,
+		                                              lisk::environment &env,
+		                                              bool allow_tail);
+
+		lak::pair<lisk::expression, size_t> make_lambda(lisk::shared_list l,
+		                                                lisk::environment &env,
+		                                                bool allow_tail);
+
+		lisk::expression make_uint(lisk::environment &env,
+		                           bool allow_tail,
+		                           lisk::expression exp);
+
+		lisk::expression make_sint(lisk::environment &env,
+		                           bool allow_tail,
+		                           lisk::expression exp);
+
+		lisk::expression make_real(lisk::environment &env,
+		                           bool allow_tail,
+		                           lisk::expression exp);
+
+		lisk::expression make_string(lisk::environment &env,
+		                             bool allow_tail,
+		                             lisk::expression exp);
+
+		/* --- string --- */
+
+		lisk::expression read_string(lisk::environment &, bool allow_tail);
+
+		lisk::expression parse_string(lisk::environment &env,
+		                              bool allow_tail,
+		                              lisk::string str);
+
+		lak::pair<lisk::expression, size_t> print_string(lisk::shared_list l,
+		                                                 lisk::environment &env,
+		                                                 bool allow_tail);
+
+		lak::pair<lisk::expression, size_t> print_line(lisk::shared_list l,
+		                                               lisk::environment &env,
+		                                               bool allow_tail);
+
+		/* --- math --- */
+
+		lisk::expression add(lisk::environment &env,
+		                     bool allow_tail,
+		                     lisk::number a,
+		                     lisk::number b);
+
+		lisk::expression sub(lisk::environment &env,
+		                     bool allow_tail,
+		                     lisk::number a,
+		                     lisk::number b);
+
+		lisk::expression mul(lisk::environment &env,
+		                     bool allow_tail,
+		                     lisk::number a,
+		                     lisk::number b);
+
+		lisk::expression div(lisk::environment &env,
+		                     bool allow_tail,
+		                     lisk::number a,
+		                     lisk::number b);
+
+		lak::pair<lisk::expression, size_t> sum(lisk::shared_list l,
+		                                        lisk::environment &env,
+		                                        bool allow_tail);
+
+		lak::pair<lisk::expression, size_t> product(lisk::shared_list l,
+		                                            lisk::environment &env,
+		                                            bool allow_tail);
+
 	};
 }
 
