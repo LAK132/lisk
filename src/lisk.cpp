@@ -25,6 +25,7 @@ SOFTWARE.
 #include "lisk/lisk.hpp"
 
 #include <iostream>
+#include <limits>
 
 namespace lisk
 {
