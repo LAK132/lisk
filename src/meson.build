@@ -13,6 +13,6 @@ lisk = static_library(
     'pointer.cpp',
     'string.cpp',
   ],
-  override_options: 'cpp_std=' + version,
+  override_options: 'cpp_std=@0@'.format(subproject('lak').get_variable('version')),
   include_directories: include_directories('../inc'),
 )
