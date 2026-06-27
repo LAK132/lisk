@@ -35,7 +35,7 @@ bool operator>>(const lisk::expression &arg, my_type &out)
 // shared pointers for you.
 lisk::expression print_my_type(lisk::environment &e,
                                bool allow_tail_eval,
-                               std::shared_ptr<my_type> my)
+                               lak::shared_ptr<my_type> my)
 {
   std::cout << "My type value: " << to_string(my->value) << "\n";
   // Use nil when you don't really want to return anything.

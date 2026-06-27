@@ -5,9 +5,7 @@
 
 lisk::string lisk::to_string(lisk::functor f)
 {
-	return "<builtin " +
-	       std::to_string(reinterpret_cast<uintptr_t>(static_cast<void *>(f))) +
-	       ">";
+	return "<builtin " + std::to_string(reinterpret_cast<uintptr_t>(f)) + ">";
 }
 
 const lisk::string &lisk::type_name(const lisk::functor &)

@@ -42,22 +42,21 @@ bool lisk::list_reader::operator>>(T &out)
 }
 
 template<typename... TYPES>
-bool lisk::impl::get_or_eval_arg_as<TYPES...>(lisk::shared_list in_list,
-                                              lisk::environment &e,
-                                              bool allow_tail,
-                                              lisk::exception &exc,
-                                              lak::tuple<TYPES...> &out_arg)
+bool lisk::impl::get_or_eval_arg_as(lisk::shared_list in_list,
+                                    lisk::environment &e,
+                                    bool allow_tail,
+                                    lisk::exception &exc,
+                                    lak::tuple<TYPES...> &out_arg)
 {
 	auto _get_or_eval_arg_as =
-	  []<typename... TYPES, size_t... I>(lisk::shared_list in_list,
-	                                     lisk::environment & e,
-	                                     bool allow_tail,
-	                                     lisk::exception &exc,
-	                                     lak::tuple<TYPES...> &out_arg,
-	                                     lak::index_sequence<I...>)
-	    ->bool
+	  []<typename... TS, size_t... I>(lisk::shared_list in_list,
+	                                  lisk::environment &e,
+	                                  bool allow_tail,
+	                                  lisk::exception &exc,
+	                                  lak::tuple<TS...> &out_arg,
+	                                  lak::index_sequence<I...>) -> bool
 	{
-		lak::tuple<lak::remove_cv_t<TYPES>...> result;
+		lak::tuple<lak::remove_cv_t<TS>...> result;
 
 		lisk::list_reader reader(in_list, e, allow_tail);
 

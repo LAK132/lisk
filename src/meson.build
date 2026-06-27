@@ -16,7 +16,6 @@ lisk = static_library(
 		'pointer.cpp',
 		'string.cpp',
 	],
-	override_options: 'cpp_std=' + version,
 	include_directories: include_directories('../include'),
 	dependencies: lak_dep,
 )

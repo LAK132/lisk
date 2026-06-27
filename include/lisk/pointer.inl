@@ -74,19 +74,19 @@ bool lisk::pointer::is_shared_ptr() const
 template<typename T>
 T *lisk::pointer::as_raw_ptr() const
 {
-	return static_cast<T *>(lak::get<void *>(_value));
+	return static_cast<T *>(lak::get<void *>(_value).UNWRAP());
 }
 
 template<typename T>
 const T *lisk::pointer::as_raw_const_ptr() const
 {
-	return static_cast<const T *>(lak::get<const void *>(_value));
+	return static_cast<const T *>(lak::get<const void *>(_value).UNWRAP());
 }
 
 template<typename T>
 lak::shared_ptr<T> lisk::pointer::as_shared_ptr() const
 {
-	return std::static_pointer_cast<T>(lak::get<lak::shared_ptr<void>>(_value));
+	return lak::shared_ptr<T>(lak::get<lak::shared_ptr<void>>(_value).UNWRAP());
 }
 
 template<typename T>

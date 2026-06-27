@@ -28,7 +28,7 @@ template<typename T>
 lisk::basic_shared_list<T> lisk::basic_shared_list<T>::append(
   basic_shared_list &list, const T &v)
 {
-	lisk::basic_shared_list result = _node ? next() : *this;
+	lisk::basic_shared_list result = list._node ? list.next() : list;
 	result.value()                 = v;
 	return result;
 }
@@ -37,7 +37,7 @@ template<typename T>
 lisk::basic_shared_list<T> lisk::basic_shared_list<T>::append(
   basic_shared_list &list, T &&v)
 {
-	lisk::basic_shared_list result = _node ? next() : *this;
+	lisk::basic_shared_list result = list._node ? list.next() : list;
 	result.value()                 = lak::move(v);
 	return result;
 }

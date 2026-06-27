@@ -39,7 +39,7 @@ inline bool lisk::callable::is_null() const
 inline bool lisk::callable::is_lambda() const
 {
 	return lak::get<lambda_ptr>(_value).map_or(
-	  [](const auto &l) -> bool { return l; }, false);
+	  [](const auto &l) -> bool { return (bool)l; }, false);
 }
 
 inline bool lisk::callable::is_functor() const
